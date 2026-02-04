@@ -1,67 +1,48 @@
 import React, { useState } from "react";
+import { universities } from "./data/Universities"; // adjust path if needed
+import { useAuth } from "./auth/auth";
 
 export const Applications = () => {
   const [typeFilter, setTypeFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
+  const [qualifiedOnly, setQualifiedOnly] = useState(false);
+  const { apsScore, subjects } = useAuth();
 
-  // ------------------ INSTITUTION DATA ------------------
-  const institutions = [
-    {
-      name: "University of Cape Town",
-      type: "University",
-      status: "Open",
-      closingDate: "30 September 2026",
-      requirements: "APS 28+, Bachelor pass, Maths 60%+",
-      link: "https://applyonline.uct.ac.za",
-    },
-    {
-      name: "University of Johannesburg",
-      type: "University",
-      status: "Open",
-      closingDate: "31 October 2026",
-      requirements: "APS 22+, Diploma/Bachelor pass",
-      link: "https://www.uj.ac.za/apply",
-    },
-    {
-      name: "Tshwane South TVET College",
-      type: "TVET",
-      status: "Open",
-      closingDate: "Ongoing (Rolling Applications)",
-      requirements: "Grade 12 pass",
-      link: "https://www.tsc.edu.za",
-    },
-    {
-      name: "False Bay TVET College",
-      type: "TVET",
-      status: "Closed",
-      closingDate: "Closed – Reopens Jan 2027",
-      requirements: "Grade 12 or equivalent",
-      link: "https://www.falsebaycollege.co.za",
-    },
-    {
-      name: "Varsity College",
-      type: "Private",
-      status: "Open",
-      closingDate: "15 November 2026",
-      requirements: "NSC pass, programme-specific requirements",
-      link: "https://www.varsitycollege.co.za",
-    },
-    {
-      name: "Boston City Campus",
-      type: "Private",
-      status: "Closed",
-      closingDate: "Closed – Next intake March 2027",
-      requirements: "NSC pass",
-      link: "https://www.boston.co.za",
-    },
-  ];
+  // ------------------ GET INSTITUTION DATA ------------------
+  const institutions = universities.map((uni) => ({
+    name: uni.name,
+    type: uni.type,
+    status: uni.applications.status,
+    closingDate: uni.applications.closingDate,
+    requirements: `Minimum APS ${uni.minAPS}+`,
+    link: uni.applications.applyLink,
+    minAPS: uni.minAPS,
+  }));
+
+  const normalize = (str) => str.toLowerCase().replace(/\s/g, "");
+
+  const doesStudentMeetInstitutionRequirements = (institution) => {
+    if (!apsScore) return false;
+    if (apsScore < institution.minAPS) return false;
+
+    // If institution has no subject requirements at institution level
+    if (!institution.institutionRequirements) return true;
+
+    return true; // Most institutions evaluate subjects at course level
+  };
 
   // ------------------ FILTER LOGIC ------------------
   const filteredInstitutions = institutions.filter((inst) => {
-    return (
-      (typeFilter === "All" || inst.type === typeFilter) &&
-      (statusFilter === "All" || inst.status === statusFilter)
-    );
+    const typeMatch = typeFilter === "All" || inst.type === typeFilter;
+    const statusMatch = statusFilter === "All" || inst.status === statusFilter;
+
+    let qualifiedMatch = true;
+
+    if (qualifiedOnly) {
+      qualifiedMatch = doesStudentMeetInstitutionRequirements(inst);
+    }
+
+    return typeMatch && statusMatch && qualifiedMatch;
   });
 
   return (
@@ -96,6 +77,18 @@ export const Applications = () => {
               <option value="Open">Open</option>
               <option value="Closed">Closed</option>
             </select>
+          </div>
+          <div style={styles.filterCard}>
+            <label
+              style={{ display: "flex", alignItems: "center", gap: "8px" }}
+            >
+              <input
+                type="checkbox"
+                checked={qualifiedOnly}
+                onChange={(e) => setQualifiedOnly(e.target.checked)}
+              />
+              Show Only Institutions I Qualify For
+            </label>
           </div>
         </div>
 
