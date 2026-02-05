@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useAuth } from "./auth/auth";
 import { universities } from "./data/Universities";
+import { courses } from "./data/Courses_data";
 
 export const CoursesPage = () => {
   const { apsScore, profileSubjects } = useAuth(); // subjects we will store later
@@ -15,13 +16,23 @@ export const CoursesPage = () => {
 
   const [selectedUniversity, setSelectedUniversity] = useState("all");
 
-  const allCourses = universities.flatMap((uni) =>
-    uni.courses.map((course) => ({
-      ...course,
-      universityName: uni.name,
-      universityLink: uni.applyLink,
-    }))
-  );
+  const allCourses = courses
+    .filter((course) =>
+      selectedUniversity === "all"
+        ? true
+        : course.offeredAt.some((u) => u.universityId === selectedUniversity)
+    )
+    .map((course) => {
+      const uniMatch = universities.find((u) =>
+        course.offeredAt.some((off) => off.universityId === u.id)
+      );
+
+      return {
+        ...course,
+        university: uniMatch?.name || "Multiple Institutions",
+        universityLink: uniMatch?.applyLink || "#",
+      };
+    });
 
   const matchesAPSAndSubjects = (course) => {
     if (!apsScore) return false;
@@ -38,6 +49,13 @@ export const CoursesPage = () => {
   };
 
   const filteredCourses = allCourses.filter((course) => {
+    // INSTITUTION FILTER
+    if (
+      selectedUniversity !== "all" &&
+      !course.offeredAt.some((u) => u.universityId === selectedUniversity)
+    )
+      return false;
+
     if (filters.field !== "all" && course.field !== filters.field) return false;
 
     if (
@@ -55,6 +73,20 @@ export const CoursesPage = () => {
     return true;
   });
   const demandRank = { High: 1, Medium: 2, Low: 3 };
+  filteredCourses.sort((a, b) => {
+    if (demandRank[a.demand] !== demandRank[b.demand]) {
+      return demandRank[a.demand] - demandRank[b.demand];
+    }
+
+    return a.minAPS - b.minAPS;
+  });
+
+  const getUniversitiesForCourse = (course) => {
+    return course.offeredAt
+      .map((o) => universities.find((u) => u.id === o.universityId)?.name)
+      .filter(Boolean)
+      .join(", ");
+  };
 
   return (
     <div style={styles.page}>
@@ -68,8 +100,8 @@ export const CoursesPage = () => {
           onChange={(e) => setSelectedUniversity(e.target.value)}
         >
           <option value="all">All Institutions</option>
-          {universities.map((uni, index) => (
-            <option key={index} value={uni.name}>
+          {universities.map((uni) => (
+            <option key={uni.id} value={uni.id}>
               {uni.name}
             </option>
           ))}
@@ -85,6 +117,9 @@ export const CoursesPage = () => {
           <option>Health</option>
           <option>Business</option>
           <option>Humanities</option>
+          <option>Engineering</option>
+          <option>Law</option>
+          <option>Creative Arts</option>
         </select>
 
         <label style={styles.label}>Duration</label>
@@ -137,7 +172,7 @@ export const CoursesPage = () => {
                     marginBottom: 6,
                   }}
                 >
-                  {course.university}
+                  {getUniversitiesForCourse(course)}
                 </p>
 
                 <p>
@@ -197,9 +232,12 @@ export const CoursesPage = () => {
             <p style={{ marginTop: 10 }}>
               <strong>Required Subjects:</strong>
               <br />
-              {selectedCourse.requiredSubjects?.length > 0
-                ? selectedCourse.requiredSubjects.join(", ")
-                : "None specified"}
+              {selectedCourse.subjects?.map((s, i) => (
+                <span key={i}>
+                  {s.name} ({s.min}%)
+                  <br />
+                </span>
+              ))}
             </p>
 
             <button
