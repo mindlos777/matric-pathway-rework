@@ -6,6 +6,7 @@ export const courses = [
     field: "Technology",
     duration: 3,
     demand: "High",
+    nqfLevel: 7,
     minAPS: 36,
     image: "https://images.unsplash.com/photo-1518770660439-4636190af475",
     subjects: [
@@ -25,6 +26,7 @@ export const courses = [
     field: "Technology",
     duration: 3,
     demand: "High",
+    nqfLevel: 7,
     minAPS: 34,
     image: "https://images.unsplash.com/photo-1537432376769-00a5c2f4c8d2",
     subjects: [
@@ -33,6 +35,7 @@ export const courses = [
     ],
     offeredAt: [{ universityId: "uj" }, { universityId: "up" }],
   },
+  //need to add nqf level for each degree
   {
     id: "beng-software-engineering",
     name: "BEng Software Engineering",
@@ -54,6 +57,7 @@ export const courses = [
     field: "Technology",
     duration: 3,
     demand: "High",
+    nqfLevel: 6,
     minAPS: 28,
     image: "https://images.unsplash.com/photo-1498050108023-c5249f4df085",
     subjects: [

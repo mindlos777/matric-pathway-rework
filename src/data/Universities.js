@@ -9,9 +9,20 @@ export const universities = [
     requirements: "Bachelor pass with strong Mathematics",
     applyLink: "https://applyonline.uct.ac.za",
     logo: "https://upload.wikimedia.org/wikipedia/en/thumb/5/5e/University_of_Cape_Town_logo.svg/512px-University_of_Cape_Town_logo.svg.png",
-    courses: [
-      /* courses here */
-    ],
+    courses: ["bsc-computer-science", "llb-law"],
+  },
+  {
+    id: "uj",
+    name: "University of Johannesburg",
+    shortName: "UJ",
+    logo: "https://upload.wikimedia.org/wikipedia/en/4/4b/University_of_Johannesburg_logo.svg",
+    type: "University",
+    status: "Open",
+    closingDate: "2026-09-30",
+    minAPS: 28,
+    applyLink: "https://www.uj.ac.za/admission-aid/apply-now/",
+
+    courses: ["bsc-computer-science", "bcom-accounting", "llb-law"],
   },
   {
     id: "wits",
@@ -23,7 +34,33 @@ export const universities = [
     requirements: "Bachelor pass with Maths & English",
     applyLink: "https://www.wits.ac.za/applications/",
     logo: "https://upload.wikimedia.org/wikipedia/en/thumb/7/70/Wits_University_logo.svg/512px-Wits_University_logo.svg.png",
-    courses: [],
+    courses: ["bsc-computer-science", "bcom-accounting", "llb-law"],
+  },
+  {
+    id: "nwu",
+    name: "North-West University",
+    shortName: "NWU",
+    logo: "https://upload.wikimedia.org/wikipedia/en/7/7d/North-West_University_logo.svg",
+    type: "University",
+    status: "Open",
+    closingDate: "2026-09-30",
+    minAPS: 26,
+    applyLink: "https://applynow.nwu.ac.za/",
+
+    courses: ["bsc-computer-science", "bcom-accounting"],
+  },
+  {
+    id: "ufs",
+    name: "University of the Free State",
+    shortName: "UFS",
+    logo: "https://upload.wikimedia.org/wikipedia/en/5/55/University_of_the_Free_State_logo.svg",
+    type: "University",
+    status: "Closing Soon",
+    closingDate: "2026-08-31",
+    minAPS: 30,
+    applyLink: "https://apply.ufs.ac.za/",
+
+    courses: ["bsc-computer-science", "bcom-accounting", "llb-law"],
   },
   {
     id: "stellenbosch",
@@ -61,7 +98,20 @@ export const universities = [
     requirements: "NSC pass",
     applyLink: "https://www.rosebankcollege.co.za",
     logo: "https://www.rosebankcollege.co.za/wp-content/uploads/2021/08/RC_Logo.png",
-    courses: [],
+    courses: ["bcom-accounting", "bsc-computer-science"],
+  },
+  {
+    id: "boston",
+    name: "Boston City Campus",
+    shortName: "Boston",
+    logo: "https://upload.wikimedia.org/wikipedia/en/6/6a/Boston_City_Campus_logo.png",
+    type: "Private College",
+    status: "Open",
+    closingDate: "2026-11-30",
+    minAPS: 18,
+    applyLink: "https://www.boston.co.za/apply/",
+
+    courses: ["bcom-accounting", "llb-law"],
   },
 
   // TVET COLLEGES
@@ -75,7 +125,7 @@ export const universities = [
     requirements: "Grade 12 pass",
     applyLink: "https://www.tsc.edu.za",
     logo: "https://www.tsc.edu.za/wp-content/uploads/2022/03/TSC-Logo.png",
-    courses: [],
+    courses: ["bsc-computer-science"],
   },
   {
     id: "false-bay-tvet",
