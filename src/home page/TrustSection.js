@@ -3,65 +3,79 @@ import React from "react";
 export function TrustSection() {
   const styles = {
     section: {
-      padding: "80px 20px",
+      padding: "clamp(60px, 8vw, 100px) 16px",
       background: "#ffffff",
     },
+
     container: {
       maxWidth: "1100px",
       margin: "0 auto",
       textAlign: "center",
     },
+
     heading: {
-      fontSize: "32px",
+      fontSize: "clamp(24px, 5vw, 34px)",
       color: "#1e3a8a",
-      marginBottom: "10px",
+      marginBottom: "12px",
+      fontWeight: "bold",
     },
+
     subheading: {
-      fontSize: "18px",
+      fontSize: "clamp(15px, 4vw, 18px)",
       color: "#475569",
-      maxWidth: "800px",
-      margin: "0 auto 50px",
+      maxWidth: "820px",
+      margin: "0 auto 48px",
       lineHeight: "1.6",
     },
+
     grid: {
       display: "grid",
       gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-      gap: "30px",
+      gap: "28px",
       marginBottom: "50px",
     },
+
     card: {
       background: "#f8fafc",
-      padding: "30px",
-      borderRadius: "16px",
-      boxShadow: "0 8px 20px rgba(0,0,0,0.06)",
+      padding: "32px",
+      borderRadius: "18px",
+      boxShadow: "0 8px 22px rgba(0,0,0,0.06)",
+      transition: "transform 0.25s ease, box-shadow 0.25s ease",
     },
+
     icon: {
-      fontSize: "36px",
-      marginBottom: "15px",
+      fontSize: "38px",
+      marginBottom: "16px",
     },
+
     cardTitle: {
-      fontSize: "18px",
+      fontSize: "clamp(16px, 4vw, 18px)",
       color: "#1e3a8a",
-      marginBottom: "10px",
+      marginBottom: "8px",
+      fontWeight: "600",
     },
+
     cardText: {
-      fontSize: "15px",
+      fontSize: "clamp(14px, 4vw, 15px)",
       color: "#475569",
-      lineHeight: "1.5",
+      lineHeight: "1.6",
     },
+
     logos: {
       display: "flex",
       justifyContent: "center",
       flexWrap: "wrap",
-      gap: "20px",
+      gap: "16px",
     },
+
     logo: {
       background: "#e2e8f0",
-      padding: "10px 18px",
-      borderRadius: "8px",
+      padding: "10px 20px",
+      borderRadius: "10px",
       fontSize: "14px",
-      fontWeight: "bold",
+      fontWeight: "600",
       color: "#1e3a8a",
+      letterSpacing: "0.3px",
     },
   };
 
@@ -84,7 +98,7 @@ export function TrustSection() {
     {
       icon: "💼",
       title: "Labour Market Insights",
-      text: "Course recommendations are informed by current job market demand.",
+      text: "Course recommendations are informed by real job market demand.",
     },
   ];
 
@@ -94,6 +108,7 @@ export function TrustSection() {
         <h2 style={styles.heading}>
           Trusted by Students. Built for the Future.
         </h2>
+
         <p style={styles.subheading}>
           A platform designed with education institutions, funding bodies, and
           data protection in mind.
@@ -101,7 +116,18 @@ export function TrustSection() {
 
         <div style={styles.grid}>
           {trustPoints.map((item, index) => (
-            <div key={index} style={styles.card}>
+            <div
+              key={index}
+              style={styles.card}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "translateY(-6px)";
+                e.currentTarget.style.boxShadow = "0 14px 30px rgba(0,0,0,0.1)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "0 8px 22px rgba(0,0,0,0.06)";
+              }}
+            >
               <div style={styles.icon}>{item.icon}</div>
               <h3 style={styles.cardTitle}>{item.title}</h3>
               <p style={styles.cardText}>{item.text}</p>

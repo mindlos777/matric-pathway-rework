@@ -1,39 +1,24 @@
 import React, { useState } from "react";
+import { bursaries_data } from "./data/Bursaries_data";
 
 export const Bursaries = () => {
   const [typeFilter, setTypeFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
   const [search, setSearch] = useState("");
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 480);
+  const [showFilters, setShowFilters] = useState(false);
 
-  const bursaries = [
-    {
-      name: "NSFAS",
-      logo: "https://www.siu.org.za/wp-content/uploads/2024/06/nsfas-logo1.png",
-      status: "Open",
-      closingDate: "2026-01-31",
-      requirements: "South African citizen, SASSA/low income household",
-      funds: ["Public", "TVET"],
-      link: "https://www.nsfas.org.za",
-    },
-    {
-      name: "Funza Lushaka Bursary",
-      logo: "https://www.siyavula.com/static_cache/13938976762742548205/themes/emas/img/future/flb-logo.png",
-      status: "Closed",
-      closingDate: "2025-10-15",
-      requirements: "Teaching degree students with strong academic record",
-      funds: ["Public"],
-      link: "https://www.funzalushaka.doe.gov.za",
-    },
-    {
-      name: "Sasol Bursary",
-      logo: "https://ceowatermandate.org/wp-content/uploads/2017/11/Sasol-Logo-One-Color1-1-e1509748703991.png",
-      status: "Open",
-      closingDate: "2026-02-28",
-      requirements: "Strong maths & science results",
-      funds: ["Public", "Private"],
-      link: "https://www.sasolbursaries.com",
-    },
-  ];
+  React.useEffect(() => {
+    const onResize = () => {
+      setIsMobile(window.innerWidth <= 480);
+      if (window.innerWidth > 480) {
+        setShowFilters(false);
+      }
+    };
+
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   const isClosingSoon = (dateStr) => {
     const today = new Date();
@@ -42,9 +27,17 @@ export const Bursaries = () => {
     return diffDays <= 14 && diffDays >= 0;
   };
 
-  const filteredBursaries = bursaries.filter((b) => {
+  const filteredBursaries = bursaries_data.filter((b) => {
     const matchesType = typeFilter === "All" || b.funds.includes(typeFilter);
-    const matchesStatus = statusFilter === "All" || b.status === statusFilter;
+
+    const matchesStatus =
+      statusFilter === "All" ||
+      (statusFilter === "Closing Soon" && isClosingSoon(b.closingDate)) ||
+      (statusFilter === "Open" &&
+        b.status === "Open" &&
+        !isClosingSoon(b.closingDate)) ||
+      (statusFilter === "Closed" && b.status === "Closed");
+
     const matchesSearch = b.name.toLowerCase().includes(search.toLowerCase());
 
     return matchesType && matchesStatus && matchesSearch;
@@ -53,57 +46,89 @@ export const Bursaries = () => {
   return (
     <div style={styles.page}>
       <div style={styles.layout}>
+        {isMobile && (
+          <button
+            onClick={() => setShowFilters(false)}
+            style={styles.closeFilterBtn}
+          >
+            &lt;
+          </button>
+        )}
+
         {/* FILTER SIDEBAR */}
-        <div style={styles.filterPanel}>
-          <h3 style={styles.filterTitle}>Filter Bursaries</h3>
+        {(!isMobile || showFilters) && (
+          <div
+            style={{
+              ...styles.filterPanel,
+              ...(isMobile
+                ? styles.mobileFilterPanel
+                : styles.desktopFilterPanel),
+            }}
+          >
+            <h3 style={styles.filterTitle}>Filter Bursaries</h3>
+            <br />
+
+            <div style={styles.filterGroup}>
+              <strong>Institution Type</strong>
+              {["All", "Public", "Private", "TVET"].map((type) => (
+                <label key={type} style={styles.label}>
+                  <input
+                    type="checkbox"
+                    checked={typeFilter === type}
+                    onChange={() => setTypeFilter(type)}
+                  />{" "}
+                  {type}
+                </label>
+              ))}
+            </div>
+
+            <div style={styles.filterGroup}>
+              <strong>Status</strong>
+              {["All", "Open", "Closing Soon", "Closed"].map((status) => (
+                <label key={status} style={styles.label}>
+                  <input
+                    type="radio"
+                    name="status"
+                    checked={statusFilter === status}
+                    onChange={() => setStatusFilter(status)}
+                  />{" "}
+                  {status}
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* CONTENT */}
+        <div style={styles.contentArea}>
+          <h1 style={styles.heading}>Available Bursaries</h1>
+
+          {isMobile && (
+            <button
+              style={styles.openFilterBtn}
+              onClick={() => setShowFilters(true)}
+            >
+              ☰ Filters
+            </button>
+          )}
 
           <input
             type="text"
             placeholder="Search bursaries..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            style={styles.searchInput}
+            style={styles.contentSearch}
           />
-
-          <div style={styles.filterGroup}>
-            <strong>Institution Type</strong>
-            {["All", "Public", "Private", "TVET"].map((type) => (
-              <label key={type} style={styles.label}>
-                <input
-                  type="checkbox"
-                  checked={typeFilter === type}
-                  onChange={() => setTypeFilter(type)}
-                />{" "}
-                {type}
-              </label>
-            ))}
-          </div>
-
-          <div style={styles.filterGroup}>
-            <strong>Status</strong>
-            {["All", "Open", "Closed"].map((status) => (
-              <label key={status} style={styles.label}>
-                <input
-                  type="radio"
-                  name="status"
-                  checked={statusFilter === status}
-                  onChange={() => setStatusFilter(status)}
-                />{" "}
-                {status}
-              </label>
-            ))}
-          </div>
-        </div>
-
-        {/* CONTENT */}
-        <div style={styles.contentArea}>
-          <h1 style={styles.heading}>Available Bursaries</h1>
 
           <div style={styles.grid}>
             {filteredBursaries.map((b) => (
               <div
-                key={b.name}
-                style={styles.card}
+                key={b.id}
+                style={{
+                  ...styles.card,
+                  opacity: b.status === "Closed" ? 0.5 : 1,
+                  filter: b.status === "Closed" ? "grayscale(40%)" : "none",
+                }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = "translateY(-6px)";
                   e.currentTarget.style.boxShadow =
@@ -172,6 +197,7 @@ const styles = {
 
   layout: {
     display: "flex",
+    alignItems: "flex-start",
   },
 
   filterPanel: {
@@ -179,18 +205,11 @@ const styles = {
     background: "white",
     padding: "30px 20px",
     borderRight: "1px solid #e2e8f0",
-    position: "fixed",
-    top: "70px",
-    left: 0,
-    height: "calc(100vh - 70px)",
-    overflow: "hidden",
-    boxShadow: "4px 0 10px rgba(0,0,0,0.05)",
   },
 
   contentArea: {
-    marginLeft: "320px",
+    flex: 1,
     padding: "40px",
-    width: "calc(100% - 320px)",
   },
 
   heading: {
@@ -264,5 +283,68 @@ const styles = {
     fontSize: "14px",
     color: "#334155",
     cursor: "pointer",
+  },
+
+  //filter responsive CSS
+  mobileFilterPanel: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    width: "300px",
+    height: "100vh",
+    zIndex: 1000,
+    overflowY: "auto",
+    boxShadow: "4px 0 20px rgba(0,0,0,0.15)",
+  },
+
+  openFilterBtn: {
+    background: "#1e3a8a",
+    color: "white",
+    border: "none",
+    padding: "10px 14px",
+    borderRadius: "8px",
+    marginBottom: "15px",
+    cursor: "pointer",
+    fontSize: "14px",
+  },
+
+  closeFilterBtn: {
+    position: "sticky",
+    top: "10px",
+    background: "#e2e8f0",
+    border: "none",
+    fontSize: "22px",
+    cursor: "pointer",
+    color: "#1e3a8a",
+    padding: "6px 12px",
+    borderRadius: "8px",
+    marginBottom: "20px",
+    zIndex: 10,
+  },
+
+  contentSearch: {
+    width: "100%",
+    maxWidth: "420px",
+    padding: "12px 14px",
+    borderRadius: "10px",
+    border: "1px solid #cbd5e1",
+    fontSize: "14px",
+    marginBottom: "30px",
+  },
+  desktopFilterPanel: {
+    position: "sticky",
+    top: "50px",
+    height: "calc(100vh - 80px)",
+    overflowY: "auto",
+  },
+
+  mobileFilterPanel: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    height: "100vh",
+    zIndex: 2000,
+    overflowY: "auto",
+    boxShadow: "4px 0 20px rgba(0,0,0,0.25)",
   },
 };
