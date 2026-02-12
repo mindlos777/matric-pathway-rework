@@ -58,13 +58,6 @@ section:nth-of-type(6) {
   transition-delay: 0.6s;
 }
 
-/* GENERAL STYLING FOR SECTIONS */
-section {
-  padding: 80px 20px;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
 /* GRID CARDS */
 .grid {
   display: grid;

@@ -101,9 +101,22 @@ export const ProfilePage = () => {
     return total;
   };
 
+  const isMobile = window.innerWidth <= 768;
+
   return (
-    <div style={styles.page}>
-      <form style={styles.card} onSubmit={handleSubmit}>
+    <div
+      style={{
+        ...styles.page,
+        padding: isMobile ? "20px 10px" : styles.page.padding,
+      }}
+    >
+      <form
+        style={{
+          ...styles.card,
+          padding: isMobile ? "20px" : styles.card.padding,
+        }}
+        onSubmit={handleSubmit}
+      >
         <h2 style={styles.heading}>Student Profile</h2>
 
         {/* PERSONAL DETAILS */}
@@ -237,7 +250,14 @@ export const ProfilePage = () => {
         <Section title="Matric Subjects & Marks">
           <div style={styles.subjectsWrapper}>
             {subjects.map((subject, index) => (
-              <div key={index} style={styles.subjectRow}>
+              <div
+                key={index}
+                style={{
+                  ...styles.subjectRow,
+                  flexDirection: isMobile ? "column" : "row",
+                  alignItems: isMobile ? "stretch" : "center",
+                }}
+              >
                 <input
                   style={styles.subjectInput}
                   placeholder="Subject Name"
@@ -259,7 +279,10 @@ export const ProfilePage = () => {
 
                 <button
                   type="button"
-                  style={styles.removeBtn}
+                  style={{
+                    ...styles.removeBtn,
+                    width: isMobile ? "100%" : "auto",
+                  }}
                   onClick={() => removeSubject(index)}
                 >
                   −
@@ -268,9 +291,17 @@ export const ProfilePage = () => {
             ))}
           </div>
 
-          <button type="button" style={styles.addBtn} onClick={addSubject}>
+          <button
+            type="button"
+            style={{
+              ...styles.addBtn,
+              width: isMobile ? "100%" : "auto",
+            }}
+            onClick={addSubject}
+          >
             + Add Subject
           </button>
+
           <div style={styles.apsBox}>
             Current APS Score: <strong>{calculateAPS()}</strong>
           </div>
@@ -342,6 +373,7 @@ const styles = {
     display: "flex",
     justifyContent: "center",
   },
+
   card: {
     width: "100%",
     maxWidth: "900px",
@@ -350,6 +382,7 @@ const styles = {
     borderRadius: "16px",
     boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
   },
+
   heading: {
     fontSize: "28px",
     color: "#1e3a8a",
@@ -360,9 +393,9 @@ const styles = {
   sectionTitle: { marginBottom: "15px", color: "#1e3a8a" },
   grid: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
     gap: "15px",
   },
+
   field: { display: "flex", flexDirection: "column" },
   label: { fontWeight: "bold", marginBottom: "5px" },
   input: {
@@ -390,11 +423,13 @@ const styles = {
   },
   subjectRow: {
     display: "flex",
+    flexDirection: "row",
     alignItems: "center",
     gap: "12px",
     marginBottom: "14px",
     width: "100%",
   },
+
   subjectInput: {
     flex: 2,
     padding: "10px",
@@ -414,9 +449,10 @@ const styles = {
     display: "flex",
     flexDirection: "column",
   },
+
   addBtn: {
     marginTop: "10px",
-    padding: "10px 16px",
+    padding: "12px",
     background: "#16a34a",
     color: "white",
     border: "none",
@@ -424,24 +460,25 @@ const styles = {
     cursor: "pointer",
     fontWeight: "bold",
     fontSize: "14px",
-    boxShadow: "0 4px 10px rgba(0,0,0,0.08)",
-    transition: "all 0.2s ease",
   },
+
   removeBtn: {
     background: "#dc2626",
     color: "white",
     border: "none",
-    padding: "10px 14px",
+    padding: "12px",
     borderRadius: "6px",
     cursor: "pointer",
     fontWeight: "bold",
   },
+
   apsBox: {
     marginTop: "15px",
-    padding: "12px",
+    padding: "14px",
     background: "#e0f2fe",
     borderRadius: "8px",
     fontWeight: "bold",
     color: "#0369a1",
+    textAlign: "center",
   },
 };

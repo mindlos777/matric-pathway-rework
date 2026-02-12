@@ -5,12 +5,14 @@ export function Headline() {
     hero: {
       background: "linear-gradient(135deg, #1e3a8a, #2749b5)",
       color: "white",
-      padding: "80px 20px",
+      padding: "clamp(50px, 8vw, 90px) 16px",
       display: "flex",
       justifyContent: "center",
     },
-    content: {
+    container: {
       maxWidth: "900px",
+      width: "100%",
+      margin: "0",
       textAlign: "center",
     },
     badge: {
@@ -18,29 +20,30 @@ export function Headline() {
       background: "rgba(255,255,255,0.15)",
       padding: "6px 14px",
       borderRadius: "20px",
-      fontSize: "14px",
-      marginBottom: "20px",
+      fontSize: "clamp(12px, 3vw, 14px)",
+      marginBottom: "18px",
     },
     title: {
-      fontSize: "42px",
+      fontSize: "clamp(28px, 6vw, 42px)",
       fontWeight: "bold",
-      lineHeight: "1.2",
-      marginBottom: "20px",
+      lineHeight: "1.15",
+      marginBottom: "18px",
     },
     highlight: {
       color: "#facc15",
     },
     subtitle: {
-      fontSize: "18px",
+      fontSize: "clamp(15px, 4vw, 18px)",
       opacity: 0.95,
       maxWidth: "700px",
-      margin: "0 auto 30px",
+      margin: "0 auto 28px",
+      lineHeight: "1.6",
     },
     actions: {
       display: "flex",
       justifyContent: "center",
-      gap: "15px",
-      marginBottom: "40px",
+      gap: "14px",
+      marginBottom: "32px",
       flexWrap: "wrap",
     },
     primaryBtn: {
@@ -48,32 +51,43 @@ export function Headline() {
       color: "#1e3a8a",
       border: "none",
       padding: "14px 22px",
-      borderRadius: "8px",
+      borderRadius: "10px",
       fontSize: "16px",
       cursor: "pointer",
       fontWeight: "bold",
+      minWidth: "220px",
     },
     secondaryBtn: {
       background: "transparent",
       color: "white",
       border: "2px solid white",
-      padding: "12px 20px",
-      borderRadius: "8px",
+      padding: "14px 22px",
+      borderRadius: "10px",
       fontSize: "16px",
       cursor: "pointer",
+      minWidth: "220px",
     },
     stats: {
       display: "flex",
       justifyContent: "center",
-      gap: "40px",
-      marginTop: "20px",
+      gap: "clamp(20px, 6vw, 40px)",
+      marginTop: "10px",
       fontSize: "14px",
+      flexWrap: "wrap",
+    },
+    statItem: {
+      minWidth: "90px",
+    },
+    statNumber: {
+      fontSize: "clamp(18px, 4vw, 22px)",
+      fontWeight: "bold",
+      display: "block",
     },
   };
 
   return (
     <section style={styles.hero}>
-      <div style={styles.content}>
+      <div style={styles.container}>
         <span style={styles.badge}>
           For Matriculants • SA Universities • NSFAS
         </span>
@@ -95,16 +109,16 @@ export function Headline() {
         </div>
 
         <div style={styles.stats}>
-          <div>
-            <strong>26+</strong>
+          <div style={styles.statItem}>
+            <span style={styles.statNumber}>26+</span>
             <span>Universities</span>
           </div>
-          <div>
-            <strong>300+</strong>
+          <div style={styles.statItem}>
+            <span style={styles.statNumber}>300+</span>
             <span>Courses</span>
           </div>
-          <div>
-            <strong>10+</strong>
+          <div style={styles.statItem}>
+            <span style={styles.statNumber}>10+</span>
             <span>Bursaries</span>
           </div>
         </div>
