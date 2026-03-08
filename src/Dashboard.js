@@ -1,7 +1,10 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "./auth/auth";
-
+import { getCourseRecommendations } from "./AI Recommender/recommendationEngine";
+import { courses } from "./data/Courses_data";
+import { generateAIInsights } from "./AI Recommender/aiInsights";
+//before that let us start building the mobile app(navbar at the bottom and also the marks section in profile page i must also be able to take an image on my matric results and it automatically detects the subjects and their respective marks), and also the AI Course Insights must recommend based on student performance(marks, subjects) remember these. Now let us start with the start page(with login and sign up)
 export const Dashboard = () => {
   const { logout, apsScore, qualifiedUniversities, subjects } = useAuth();
   const navigate = useNavigate();
@@ -11,12 +14,19 @@ export const Dashboard = () => {
     navigate("/account"); // redirect after logout
   };
 
+  const aiCourses = getCourseRecommendations(courses, apsScore, subjects).slice(
+    0,
+    5
+  );
+  const aiInsights = generateAIInsights(subjects, apsScore);
+
   return (
     <div style={styles.page}>
       {/* Header */}
       <div style={styles.header}>
         <div>
           <h1 style={styles.title}>Welcome back 👋</h1>
+
           <p style={styles.subtitle}>
             Your academic journey, simplified and guided.
           </p>
@@ -73,43 +83,62 @@ export const Dashboard = () => {
         )}
       </div>
 
-      {/* Actions */}
+      {/* Quick Actions */}
       <div style={styles.section}>
         <h2 style={styles.sectionTitle}>Quick Actions</h2>
 
         <div style={styles.actionGrid}>
           <ActionCard
-            title="Calculate APS"
-            description="Enter your marks and see where you qualify."
-            button="Go to APS Calculator"
-            onClick={() => (window.location.href = "/aps")}
-          />
-
-          <ActionCard
             title="University Applications"
             description="View and apply to universities you qualify for."
             button="View Applications"
-            onClick={() => alert("Applications coming next")}
+            onClick={() => navigate("/applications")}
           />
 
           <ActionCard
             title="Bursaries & Funding"
             description="Find funding options you are eligible for."
             button="View Bursaries"
-            onClick={() => alert("Bursaries coming next")}
+            onClick={() => navigate("/bursaries")}
+          />
+
+          <ActionCard
+            title="AI Education Assistant"
+            description="Chat with AI to get course recommendations and career advice."
+            button="Open AI Chat"
+            onClick={() => navigate("/ai")}
           />
         </div>
       </div>
 
-      {/* Progress */}
-      <div style={styles.progressCard}>
-        <h2 style={styles.sectionTitle}>Your Progress</h2>
-        <ul style={styles.progressList}>
-          <li>⬜ Complete your profile</li>
-          <li>⬜ Calculate APS score</li>
-          <li>⬜ View qualified universities</li>
-          <li>⬜ Submit first application</li>
-        </ul>
+      {/* AI COURSE INSIGHTS */}
+      <div style={styles.section}>
+        <h2 style={styles.sectionTitle}>🤖 AI Course Insights</h2>
+
+        {!aiInsights ? (
+          <p style={styles.emptyText}>
+            Add your subjects to unlock AI insights.
+          </p>
+        ) : (
+          <div style={styles.aiCard}>
+            <p style={styles.aiText}>
+              <strong>APS Analysis:</strong> {aiInsights.apsInsight}
+            </p>
+
+            <p style={styles.aiText}>
+              <strong>Career Guidance:</strong> {aiInsights.careerInsight}
+            </p>
+
+            <div>
+              <strong>Recommended Courses:</strong>
+              <ul style={styles.aiList}>
+                {aiInsights.courses.map((c, i) => (
+                  <li key={i}>{c}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -269,5 +298,47 @@ const styles = {
     borderRadius: "6px",
     cursor: "pointer",
     fontWeight: "bold",
+  },
+
+  aiGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+    gap: "20px",
+  },
+
+  aiCard: {
+    background: "white",
+    padding: "20px",
+    borderRadius: "14px",
+    boxShadow: "0 8px 20px rgba(0,0,0,0.08)",
+  },
+
+  aiBadge: {
+    marginTop: "10px",
+    display: "inline-block",
+    padding: "6px 10px",
+    borderRadius: "8px",
+    background: "#e0f2fe",
+    color: "#0369a1",
+    fontWeight: "bold",
+    fontSize: "12px",
+  },
+
+  aiCard: {
+    background: "white",
+    padding: "25px",
+    borderRadius: "16px",
+    boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
+  },
+
+  aiText: {
+    marginBottom: "15px",
+    color: "#334155",
+  },
+
+  aiList: {
+    marginTop: "10px",
+    paddingLeft: "20px",
+    color: "#475569",
   },
 };

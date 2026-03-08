@@ -1,15 +1,18 @@
 import React, { useState } from "react";
 import { universities } from "./data/Universities";
 import { useAuth } from "./auth/auth";
+import { FilterPanel } from "./components/FilterPanel";
 
 export const Applications = () => {
-  const [typeFilter, setTypeFilter] = useState("All");
-  const [statusFilter, setStatusFilter] = useState("All");
-  const [qualifiedOnly, setQualifiedOnly] = useState(false);
   const { apsScore, subjects } = useAuth();
-  const [search, setSearch] = useState("");
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 480);
   const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({
+    search: "",
+    type: "All",
+    status: "All",
+    qualifiedOnly: false,
+  });
 
   React.useEffect(() => {
     const onResize = () => {
@@ -41,22 +44,25 @@ export const Applications = () => {
   // ------------------ FILTER LOGIC ------------------
   const filteredInstitutions = universities.filter((uni) => {
     // Search
-    if (search && !uni.name.toLowerCase().includes(search.toLowerCase())) {
+    if (
+      filters.search &&
+      !uni.name.toLowerCase().includes(filters.search.toLowerCase())
+    ) {
       return false;
     }
 
-    // Institution type
-    if (typeFilter !== "All" && uni.type !== typeFilter) {
+    // Type
+    if (filters.type !== "All" && uni.type !== filters.type) {
       return false;
     }
 
-    // Application status
-    if (statusFilter !== "All" && uni.status !== statusFilter) {
+    // Status
+    if (filters.status !== "All" && uni.status !== filters.status) {
       return false;
     }
 
-    // Qualification filter
-    if (qualifiedOnly && !doesStudentMeetInstitutionRequirements(uni)) {
+    // Qualified only
+    if (filters.qualifiedOnly && !doesStudentMeetInstitutionRequirements(uni)) {
       return false;
     }
 
@@ -66,87 +72,41 @@ export const Applications = () => {
   return (
     <div style={styles.page}>
       <div style={styles.layout}>
-        {/* FILTER SIDEBAR */}
-        {(!isMobile || showFilters) && (
-          <div
-            style={{
-              ...styles.filterPanel,
-              ...(isMobile ? styles.mobileFilterPanel : {}),
-            }}
-          >
-            {isMobile && (
-              <button
-                onClick={() => setShowFilters(false)}
-                style={styles.closeFilterBtn}
-              >
-                &lt;
-              </button>
-            )}
-            <h2 style={styles.filterTitle}>Filters</h2>
-
-            <div style={styles.filterCard}>
-              <p style={styles.filterLabel}>Institution Type</p>
-              <select
-                style={styles.select}
-                value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value)}
-              >
-                <option value="All">All</option>
-                <option value="University">University</option>
-                <option value="TVET">TVET College</option>
-                <option value="Private">Private College</option>
-              </select>
-            </div>
-
-            <div style={styles.filterCard}>
-              <p style={styles.filterLabel}>Application Status</p>
-              <select
-                style={styles.select}
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-              >
-                <option value="All">All</option>
-                <option value="Open">Open</option>
-                <option value="Closing Soon">Closing Soon</option>
-                <option value="Closed">Closed</option>
-              </select>
-            </div>
-            <div style={styles.filterCard}>
-              <label
-                style={{ display: "flex", alignItems: "center", gap: "8px" }}
-              >
-                <input
-                  type="checkbox"
-                  checked={qualifiedOnly}
-                  onChange={(e) => setQualifiedOnly(e.target.checked)}
-                />
-                Show Only Institutions I Qualify For
-              </label>
-            </div>
-          </div>
-        )}
-
         {/* CONTENT AREA */}
         <div style={styles.contentArea}>
           <div style={styles.headerRow}>
             <h2 style={styles.heading}>Applications</h2>
 
-            {isMobile && (
-              <button
-                style={styles.openFilterBtn}
-                onClick={() => setShowFilters(true)}
-              >
-                ☰ Filters
-              </button>
-            )}
+            {/* FILTER SIDEBAR */}
+            {(!isMobile || showFilters) && (
+              <FilterPanel
+                filters={filters}
+                setFilters={setFilters}
+                config={{
+                  search: { placeholder: "Search institutions..." },
 
-            <input
-              type="text"
-              placeholder="Search institutions..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              style={styles.searchInput}
-            />
+                  fields: [
+                    {
+                      key: "type",
+                      label: "Institution Type",
+                      type: "select",
+                      options: ["All", "University", "TVET", "Private"],
+                    },
+                    {
+                      key: "status",
+                      label: "Application Status",
+                      type: "select",
+                      options: ["All", "Open", "Closing Soon", "Closed"],
+                    },
+                    {
+                      key: "qualifiedOnly",
+                      label: "Show Only Institutions I Qualify For",
+                      type: "checkbox",
+                    },
+                  ],
+                }}
+              />
+            )}
           </div>
           <br />
 
@@ -240,11 +200,6 @@ const styles = {
     minHeight: "100vh",
   },
 
-  /* FLEX LAYOUT PREVENTS OVERLAP */
-  layout: {
-    display: "flex",
-  },
-
   /* SIDEBAR */
   filterPanel: {
     width: "280px",
@@ -329,16 +284,6 @@ const styles = {
     height: "70px",
     objectFit: "contain",
     marginRight: "20px",
-  },
-  card: {
-    background: "white",
-    padding: "20px",
-    marginBottom: "20px",
-    borderRadius: "12px",
-    boxShadow: "0 8px 20px rgba(0,0,0,0.08)",
-    display: "flex",
-    alignItems: "center",
-    gap: "20px",
   },
   //search bar
   searchBarWrapper: {
