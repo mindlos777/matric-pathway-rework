@@ -11,7 +11,9 @@ export const AuthProvider = ({ children }) => {
 
   const login = (email, password) => {
     if (email && password) {
-      setUser({ email });
+      const newUser = { email };
+      setUser(newUser);
+      localStorage.setItem("user", JSON.stringify(newUser));
       return true;
     }
     return false;
@@ -19,6 +21,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     setUser(null);
+    localStorage.removeItem("user");
     setApsScore(null);
     setSubjects([]);
     setQualifiedUniversities([]);
@@ -33,6 +36,14 @@ export const AuthProvider = ({ children }) => {
       setQualifiedUniversities([]);
     }
   }, [apsScore]); // runs whenever APS updates
+
+  useEffect(() => {
+    const savedUser = localStorage.getItem("user");
+
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
+    }
+  }, []);
 
   return (
     <AuthContext.Provider

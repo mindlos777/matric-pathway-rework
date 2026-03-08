@@ -1,10 +1,9 @@
 import React, { useState } from "react";
 import { bursaries_data } from "./data/Bursaries_data";
+import { FilterPanel } from "./components/FilterPanel";
+import { DashboardLayout } from "./dashboardLayout";
 
 export const Bursaries = () => {
-  const [typeFilter, setTypeFilter] = useState("All");
-  const [statusFilter, setStatusFilter] = useState("All");
-  const [search, setSearch] = useState("");
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 480);
   const [showFilters, setShowFilters] = useState(false);
 
@@ -20,6 +19,12 @@ export const Bursaries = () => {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
+  const [filters, setFilters] = useState({
+    search: "",
+    type: "All",
+    status: "All",
+  });
+
   const isClosingSoon = (dateStr) => {
     const today = new Date();
     const closing = new Date(dateStr);
@@ -28,17 +33,20 @@ export const Bursaries = () => {
   };
 
   const filteredBursaries = bursaries_data.filter((b) => {
-    const matchesType = typeFilter === "All" || b.funds.includes(typeFilter);
+    const matchesType =
+      filters.type === "All" || b.funds.includes(filters.type);
 
     const matchesStatus =
-      statusFilter === "All" ||
-      (statusFilter === "Closing Soon" && isClosingSoon(b.closingDate)) ||
-      (statusFilter === "Open" &&
+      filters.status === "All" ||
+      (filters.status === "Closing Soon" && isClosingSoon(b.closingDate)) ||
+      (filters.status === "Open" &&
         b.status === "Open" &&
         !isClosingSoon(b.closingDate)) ||
-      (statusFilter === "Closed" && b.status === "Closed");
+      (filters.status === "Closed" && b.status === "Closed");
 
-    const matchesSearch = b.name.toLowerCase().includes(search.toLowerCase());
+    const matchesSearch = b.name
+      .toLowerCase()
+      .includes(filters.search.toLowerCase());
 
     return matchesType && matchesStatus && matchesSearch;
   });
@@ -46,79 +54,35 @@ export const Bursaries = () => {
   return (
     <div style={styles.page}>
       <div style={styles.layout}>
-        {isMobile && (
-          <button
-            onClick={() => setShowFilters(false)}
-            style={styles.closeFilterBtn}
-          >
-            &lt;
-          </button>
-        )}
-
-        {/* FILTER SIDEBAR */}
-        {(!isMobile || showFilters) && (
-          <div
-            style={{
-              ...styles.filterPanel,
-              ...(isMobile
-                ? styles.mobileFilterPanel
-                : styles.desktopFilterPanel),
-            }}
-          >
-            <h3 style={styles.filterTitle}>Filter Bursaries</h3>
-            <br />
-
-            <div style={styles.filterGroup}>
-              <strong>Institution Type</strong>
-              {["All", "Public", "Private", "TVET"].map((type) => (
-                <label key={type} style={styles.label}>
-                  <input
-                    type="checkbox"
-                    checked={typeFilter === type}
-                    onChange={() => setTypeFilter(type)}
-                  />{" "}
-                  {type}
-                </label>
-              ))}
-            </div>
-
-            <div style={styles.filterGroup}>
-              <strong>Status</strong>
-              {["All", "Open", "Closing Soon", "Closed"].map((status) => (
-                <label key={status} style={styles.label}>
-                  <input
-                    type="radio"
-                    name="status"
-                    checked={statusFilter === status}
-                    onChange={() => setStatusFilter(status)}
-                  />{" "}
-                  {status}
-                </label>
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* CONTENT */}
         <div style={styles.contentArea}>
           <h1 style={styles.heading}>Available Bursaries</h1>
 
-          {isMobile && (
-            <button
-              style={styles.openFilterBtn}
-              onClick={() => setShowFilters(true)}
-            >
-              ☰ Filters
-            </button>
-          )}
+          {/* FILTER SIDEBAR */}
+          {(!isMobile || showFilters) && (
+            <FilterPanel
+              filters={filters}
+              setFilters={setFilters}
+              config={{
+                search: { placeholder: "Search bursaries..." },
 
-          <input
-            type="text"
-            placeholder="Search bursaries..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            style={styles.contentSearch}
-          />
+                fields: [
+                  {
+                    key: "type",
+                    label: "Institution Type",
+                    type: "select",
+                    options: ["All", "Public", "Private", "TVET"],
+                  },
+                  {
+                    key: "status",
+                    label: "Application Status",
+                    type: "select",
+                    options: ["All", "Open", "Closing Soon", "Closed"],
+                  },
+                ],
+              }}
+            />
+          )}
 
           <div style={styles.grid}>
             {filteredBursaries.map((b) => (
@@ -195,18 +159,6 @@ const styles = {
     minHeight: "100vh",
   },
 
-  layout: {
-    display: "flex",
-    alignItems: "flex-start",
-  },
-
-  filterPanel: {
-    width: "300px",
-    background: "white",
-    padding: "30px 20px",
-    borderRight: "1px solid #e2e8f0",
-  },
-
   contentArea: {
     flex: 1,
     padding: "40px",
@@ -256,33 +208,6 @@ const styles = {
     fontSize: "12px",
     fontWeight: "bold",
     marginLeft: "10px",
-  },
-
-  searchInput: {
-    width: "90%",
-    padding: "10px",
-    marginBottom: "20px",
-    borderRadius: "8px",
-    border: "1px solid #cbd5e1",
-  },
-
-  filterTitle: {
-    fontSize: "18px",
-    fontWeight: "bold",
-    marginBottom: "15px",
-    color: "#1e3a8a",
-  },
-
-  filterGroup: {
-    marginBottom: "25px",
-  },
-
-  label: {
-    display: "block",
-    marginBottom: "8px",
-    fontSize: "14px",
-    color: "#334155",
-    cursor: "pointer",
   },
 
   //filter responsive CSS

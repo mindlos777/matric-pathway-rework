@@ -2,21 +2,20 @@ import React, { useState } from "react";
 import { useAuth } from "./auth/auth";
 import { universities } from "./data/Universities";
 import { courses } from "./data/Courses_data";
+import { FilterPanel } from "./components/FilterPanel";
 
 export const CoursesPage = () => {
   const { apsScore, profileSubjects } = useAuth(); // subjects we will store later
   const [selectedCourse, setSelectedCourse] = useState(null);
-  const [search, setSearch] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
 
   const [filters, setFilters] = useState({
+    search: "",
+    institution: "all",
     field: "all",
-    duration: "all",
+    duration: 6, // default max for range slider
     demand: "all",
     apsMatch: false,
   });
-
-  const [selectedUniversity, setSelectedUniversity] = useState("all");
 
   // Count how many institutions offer each course
   const courseInstitutionCount = {};
@@ -49,22 +48,12 @@ export const CoursesPage = () => {
     });
   };
 
-  //Institution filter
-  const selectedUniversityCourses = (() => {
-    if (selectedUniversity === "all") return null;
-
-    const uni = universities.find((u) => u.name === selectedUniversity);
-    return uni ? uni.courses : [];
-  })();
-
   //Course filtering system
   const filteredCourses = allCourses.filter((course) => {
-    // Institution filter
-    if (
-      selectedUniversity !== "all" &&
-      !selectedUniversityCourses?.includes(course.id)
-    ) {
-      return false;
+    // Institution
+    if (filters.institution !== "all") {
+      const uni = universities.find((u) => u.name === filters.institution);
+      if (!uni?.courses.includes(course.id)) return false;
     }
 
     // Field
@@ -72,11 +61,8 @@ export const CoursesPage = () => {
       return false;
     }
 
-    // Duration
-    if (
-      filters.duration !== "all" &&
-      course.duration !== Number(filters.duration)
-    ) {
+    // Duration (range max)
+    if (course.duration > filters.duration) {
       return false;
     }
 
@@ -87,13 +73,13 @@ export const CoursesPage = () => {
 
     // Search
     if (
-      searchTerm &&
-      !course.name.toLowerCase().includes(searchTerm.toLowerCase())
+      filters.search &&
+      !course.name.toLowerCase().includes(filters.search.toLowerCase())
     ) {
       return false;
     }
 
-    // BASED ON MY APS
+    // APS match
     if (filters.apsMatch && !matchesAPSAndSubjects(course)) {
       return false;
     }
@@ -104,15 +90,6 @@ export const CoursesPage = () => {
   //DESKTOP VIEW
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 480);
   const [showFilters, setShowFilters] = useState(false);
-
-  React.useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 480);
-      if (window.innerWidth > 480) setShowFilters(false);
-    };
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
 
   //demand ranking & sorting best(high) to worst(low)
   const demandRank = { High: 1, Medium: 2, Low: 3 };
@@ -141,115 +118,72 @@ export const CoursesPage = () => {
         />
       )}
 
-      {/* FILTER SIDEBAR */}
-      {(!isMobile || showFilters) && (
-        <div
-          style={{
-            ...(isMobile ? {} : styles.sidebar),
-            ...(isMobile && showFilters ? styles.mobileSidebar : {}),
-          }}
-        >
-          {isMobile && (
-            <button
-              style={styles.closeFilterBtn}
-              onClick={() => setShowFilters(false)}
-            >
-              &lt;
-            </button>
-          )}
-          <h3 style={styles.filterTitle}>Filter Courses</h3>
-
-          <label style={styles.label}>Institution</label>
-          <select
-            style={styles.select}
-            value={selectedUniversity}
-            onChange={(e) => setSelectedUniversity(e.target.value)}
-          >
-            <option value="all">All Institutions</option>
-            {universities.map((uni) => (
-              <option key={uni.id} value={uni.name}>
-                {uni.name}
-              </option>
-            ))}
-          </select>
-
-          <label style={styles.label}>Field</label>
-          <select
-            style={styles.select}
-            onChange={(e) => setFilters({ ...filters, field: e.target.value })}
-          >
-            <option value="all">All</option>
-            <option>Technology</option>
-            <option>Health</option>
-            <option>Business</option>
-            <option>Humanities</option>
-            <option>Engineering</option>
-            <option>Law</option>
-            <option>Creative Arts</option>
-          </select>
-
-          <label style={styles.label}>Duration</label>
-          <select
-            style={styles.select}
-            onChange={(e) =>
-              setFilters({ ...filters, duration: e.target.value })
-            }
-          >
-            <option value="all">All</option>
-            <option value="3">3 Years</option>
-            <option value="4">4 Years</option>
-          </select>
-
-          <label style={styles.label}>Job Market Demand</label>
-          <select
-            style={styles.select}
-            onChange={(e) => setFilters({ ...filters, demand: e.target.value })}
-          >
-            <option value="all">All</option>
-            <option>High</option>
-            <option>Medium</option>
-            <option>Low</option>
-          </select>
-
-          <div style={styles.checkboxRow}>
-            <input
-              type="checkbox"
-              onChange={(e) =>
-                setFilters({ ...filters, apsMatch: e.target.checked })
-              }
-            />
-            <span style={{ marginLeft: 8 }}>Based on My APS</span>
-          </div>
-        </div>
-      )}
-
       {/* COURSES AREA */}
       <div
         style={{
           ...styles.content,
-          marginLeft: isMobile ? 0 : "260px",
         }}
       >
-        {isMobile && (
-          <button
-            style={styles.openFilterBtn}
-            onClick={() => setShowFilters(true)}
-          >
-            ☰ Filters
-          </button>
-        )}
-
         <h2 style={styles.heading}>Explore Courses</h2>
 
-        <div style={styles.searchBarWrapper}>
-          <input
-            type="text"
-            placeholder="Search courses (e.g. Computer Science, Accounting...)"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={styles.searchInput}
-          />
-        </div>
+        <FilterPanel
+          filters={filters}
+          setFilters={setFilters}
+          config={{
+            search: { placeholder: "Search courses..." },
+
+            fields: [
+              {
+                key: "institution",
+                label: "Institution",
+                type: "select",
+                options: [
+                  { label: "All Institutions", value: "all" },
+                  ...universities.map((u) => ({
+                    label: u.name,
+                    value: u.name,
+                  })),
+                ],
+              },
+
+              {
+                key: "field",
+                label: "Field",
+                type: "select",
+                options: [
+                  "all",
+                  "Technology",
+                  "Health",
+                  "Business",
+                  "Engineering",
+                  "Law",
+                ],
+              },
+
+              {
+                key: "duration",
+                label: "Duration",
+                type: "range",
+                min: 3,
+                max: 6,
+                unit: "years",
+              },
+
+              {
+                key: "demand",
+                label: "Demand",
+                type: "select",
+                options: ["all", "High", "Medium", "Low"],
+              },
+
+              {
+                key: "apsMatch",
+                label: "Match My APS",
+                type: "checkbox",
+              },
+            ],
+          }}
+        />
 
         <div style={styles.grid}>
           {filteredCourses.map((course, index) => (
@@ -358,22 +292,9 @@ export const CoursesPage = () => {
 const styles = {
   page: { display: "flex", background: "#f4f6f9" },
 
-  sidebar: {
-    width: "230px",
-    padding: "25px",
-    background: "white",
-    boxShadow: "2px 0 8px rgba(0,0,0,0.05)",
-    position: "fixed",
-    top: 50,
-    left: 0,
-    height: "100vh",
-    overflowY: "auto",
-  },
-
   content: {
     padding: "40px",
     width: "100%",
-    marginLeft: "260px",
   },
 
   heading: { marginBottom: "20px", color: "#1e3a8a" },
@@ -581,23 +502,50 @@ const styles = {
     marginLeft: "0",
   },
   //FILTER OPEN & CLOSE CSS
-  openFilterBtn: {
+
+  searchRow: {
+    display: "flex",
+    gap: "10px",
+    marginBottom: "15px",
+  },
+
+  filterToggleBtn: {
     background: "#1e3a8a",
     color: "white",
     border: "none",
-    padding: "10px 16px",
-    borderRadius: "8px",
-    marginBottom: "15px",
-    fontWeight: "bold",
+    padding: "12px 16px",
+    borderRadius: "10px",
     cursor: "pointer",
+    fontWeight: "bold",
+  },
+
+  filterPanel: {
+    background: "white",
+    borderRadius: "14px",
+    padding: "20px",
+    marginBottom: "25px",
+    boxShadow: "0 8px 20px rgba(0,0,0,0.08)",
+  },
+
+  filterHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: "20px",
+  },
+
+  filterGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+    gap: "20px",
   },
 
   closeFilterBtn: {
     background: "transparent",
     border: "none",
     fontSize: "22px",
-    fontWeight: "bold",
     cursor: "pointer",
-    marginBottom: "15px",
+    color: "#1e3a8a",
+    fontWeight: "bold",
   },
 };

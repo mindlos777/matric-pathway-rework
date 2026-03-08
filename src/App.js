@@ -1,8 +1,9 @@
 import "./styles.css";
-import { Routes, Route } from "react-router-dom";
-import { AuthProvider } from "./auth/auth";
+import { Routes, Route, useLocation } from "react-router-dom";
+import { AuthProvider, useAuth } from "./auth/auth";
 
-import { Navbar } from "./navbar";
+import { PublicLayout } from "./PublicLayout";
+import { DashboardLayout } from "./dashboardLayout";
 import { Home } from "./Home_Page";
 import { APSCalculator } from "./APSCalculator";
 import { AccountPage } from "./AccountPage";
@@ -12,56 +13,132 @@ import { Applications } from "./Applications";
 import { CoursesPage } from "./Courses";
 import { Bursaries } from "./Bursaries";
 import { ProfilePage } from "./Profile";
+import { ApplicationStatusTracker } from "./ApplicationStatusTracker";
+import { ApplicationTrackerProvider } from "./ApplicationTrackerContext";
+
+import { AIChatWidget } from "./components/AIChatWidget";
 
 function App() {
   return (
     <AuthProvider>
-      <Navbar />
+      <ApplicationTrackerProvider>
+        <AppContent />
+      </ApplicationTrackerProvider>
+    </AuthProvider>
+  );
+}
 
+/* ---------- THIS COMPONENT CAN SAFELY USE useAuth ---------- */
+
+const AppContent = () => {
+  const location = useLocation();
+  const { user } = useAuth();
+
+  const hideAI = !user || location.pathname === "/profile";
+
+  return (
+    <>
       <Routes>
         {/* Public routes */}
-        <Route path="/" element={<Home />} />
-        <Route path="/aps" element={<APSCalculator />} />
-        <Route path="/about" element={<div></div>} />
-        <Route path="/account" element={<AccountPage />} />
-        <Route path="/courses" element={<CoursesPage />} />
+        <Route
+          path="/"
+          element={
+            <PublicLayout>
+              <Home />
+            </PublicLayout>
+          }
+        />
+
+        <Route
+          path="/aps"
+          element={
+            <PublicLayout>
+              <APSCalculator />
+            </PublicLayout>
+          }
+        />
+
+        <Route
+          path="/account"
+          element={
+            <PublicLayout>
+              <AccountPage />
+            </PublicLayout>
+          }
+        />
 
         {/* Protected routes */}
         <Route
           path="/dashboard"
           element={
             <ProtectedRoute>
-              <Dashboard />
+              <DashboardLayout>
+                <Dashboard />
+              </DashboardLayout>
             </ProtectedRoute>
           }
         />
+
         <Route
-          path="/profile"
+          path="/courses"
           element={
             <ProtectedRoute>
-              <ProfilePage />
+              <DashboardLayout>
+                <CoursesPage />
+              </DashboardLayout>
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/applications"
           element={
             <ProtectedRoute>
-              <Applications />
+              <DashboardLayout>
+                <Applications />
+              </DashboardLayout>
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/bursaries"
           element={
             <ProtectedRoute>
-              <Bursaries />
+              <DashboardLayout>
+                <Bursaries />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <ProfilePage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/application-status"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <ApplicationStatusTracker />
+              </DashboardLayout>
             </ProtectedRoute>
           }
         />
       </Routes>
-    </AuthProvider>
+
+      {/* GLOBAL AI CHAT WIDGET */}
+      {!hideAI && <AIChatWidget />}
+    </>
   );
-}
+};
 
 export default App;
