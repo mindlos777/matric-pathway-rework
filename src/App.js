@@ -15,7 +15,6 @@ import { Bursaries } from "./Bursaries";
 import { ProfilePage } from "./Profile";
 import { ApplicationStatusTracker } from "./ApplicationStatusTracker";
 import { ApplicationTrackerProvider } from "./ApplicationTrackerContext";
-
 import { AIChatWidget } from "./components/AIChatWidget";
 
 function App() {
