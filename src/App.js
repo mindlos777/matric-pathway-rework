@@ -1,7 +1,8 @@
 import "./styles.css";
 import { Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "./auth/auth";
-
+import React, { useEffect } from "react";
+import { useState } from "react";
 import { PublicLayout } from "./PublicLayout";
 import { DashboardLayout } from "./dashboardLayout";
 import { Home } from "./Home_Page";
@@ -18,9 +19,25 @@ import { ApplicationTrackerProvider } from "./ApplicationTrackerContext";
 import { AIChatWidget } from "./components/AIChatWidget";
 
 function App() {
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  useEffect(() => {
+    const goOffline = () => setIsOnline(false);
+    const goOnline = () => setIsOnline(true);
+
+    window.addEventListener("offline", goOffline);
+    window.addEventListener("online", goOnline);
+
+    return () => {
+      window.removeEventListener("offline", goOffline);
+      window.removeEventListener("online", goOnline);
+    };
+  }, []);
+
   return (
     <AuthProvider>
       <ApplicationTrackerProvider>
+        {!isOnline && <div>You are offline</div>}
         <AppContent />
       </ApplicationTrackerProvider>
     </AuthProvider>
