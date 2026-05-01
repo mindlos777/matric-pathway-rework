@@ -92,7 +92,12 @@ const styles = {
     padding: "20px",
     borderRight: "1px solid #e2e8f0",
     transition: "width 0.3s ease",
-    overflow: "hidden",
+    height: "100vh",
+    position: "sticky",
+    top: 0,
+    overflowY: "hidden",
+    overflowX: "hidden",
+    flexShrink: 0,
   },
 
   logoRow: {
@@ -128,6 +133,7 @@ const styles = {
     flex: 1,
     display: "flex",
     flexDirection: "column",
+    minHeight: "100vh",
   },
 
   header: {
