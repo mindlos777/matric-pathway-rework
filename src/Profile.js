@@ -1,19 +1,8 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from "react";
 import { useAuth } from "./auth/auth";
 
 export const ProfilePage = () => {
-  const {
-    user,
-    profileData,
-    saveProfile,
-    setApsScore,
-    setSubjects,
-    subjects,
-  } = useAuth();
-
-  const [saving, setSaving] = useState(false);
-
+  const { setApsScore, setSubjects, subjects } = useAuth();
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
@@ -33,25 +22,14 @@ export const ProfilePage = () => {
     schoolName: "",
     matricYear: "",
 
+    mathematics: "",
+    english: "",
+    physics: "",
+    lifeOrientation: "",
+
     disability: "No",
     disabilityDetails: "",
   });
-
-  /* AUTO FILL FROM FIREBASE */
-  useEffect(() => {
-    if (profileData) {
-      setForm((prev) => ({
-        ...prev,
-        ...profileData,
-        email: profileData.email || user?.email || "",
-      }));
-    } else if (user?.email) {
-      setForm((prev) => ({
-        ...prev,
-        email: user.email,
-      }));
-    }
-  }, [profileData, user]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -89,6 +67,22 @@ export const ProfilePage = () => {
     setSubjects(updated);
   };
 
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    const cleanedSubjects = subjects.map((s) => ({
+      name: s.name.trim(),
+      mark: Number(s.mark),
+    }));
+
+    const aps = calculateAPS();
+
+    setSubjects(cleanedSubjects);
+    setApsScore(aps);
+
+    alert("Profile saved!");
+  };
+
   const calculateAPS = () => {
     let total = 0;
 
@@ -105,38 +99,6 @@ export const ProfilePage = () => {
     });
 
     return total;
-  };
-
-const navigate = useNavigate();
-const handleSubmit = async (e) => {
-  e.preventDefault();
-
-  try {
-    setSaving(true);
-
-    const cleanedSubjects = subjects.map((s) => ({
-      name: s.name.trim(),
-      mark: Number(s.mark),
-    }));
-
-    const aps = calculateAPS();
-
-    await saveProfile({
-      ...form,
-      email: user?.email || form.email,
-      subjects: cleanedSubjects,
-      apsScore: aps,
-      updatedAt: new Date(),
-    });
-
-      alert("Profile saved successfully!");
-      navigate("/dashboard", { replace: true });
-    } catch (error) {
-      console.error(error);
-      alert("Failed to save profile.");
-    } finally {
-      setSaving(false);
-    }
   };
 
   const isMobile = window.innerWidth <= 768;
@@ -166,7 +128,6 @@ const handleSubmit = async (e) => {
             onChange={handleChange}
             required
           />
-
           <Input
             label="Last Name"
             name="lastName"
@@ -174,13 +135,13 @@ const handleSubmit = async (e) => {
             onChange={handleChange}
             required
           />
-
           <Input
             label="Date of Birth"
             name="dob"
             type="date"
             value={form.dob}
             onChange={handleChange}
+            required
           />
 
           <Select
@@ -200,6 +161,7 @@ const handleSubmit = async (e) => {
             name="idNumber"
             value={form.idNumber}
             onChange={handleChange}
+            required
           />
 
           <Select
@@ -214,20 +176,22 @@ const handleSubmit = async (e) => {
           </Select>
         </Section>
 
-        {/* CONTACT */}
+        {/* CONTACT DETAILS */}
         <Section title="Contact Information">
           <Input
             label="Email Address"
             name="email"
+            type="email"
             value={form.email}
-            disabled
+            onChange={handleChange}
+            required
           />
-
           <Input
             label="Phone Number"
             name="phone"
             value={form.phone}
             onChange={handleChange}
+            required
           />
         </Section>
 
@@ -238,27 +202,28 @@ const handleSubmit = async (e) => {
             name="addressLine1"
             value={form.addressLine1}
             onChange={handleChange}
+            required
           />
-
           <Input
             label="City/Town"
             name="city"
             value={form.city}
             onChange={handleChange}
+            required
           />
-
           <Input
             label="Province"
             name="province"
             value={form.province}
             onChange={handleChange}
+            required
           />
-
           <Input
             label="Postal Code"
             name="postalCode"
             value={form.postalCode}
             onChange={handleChange}
+            required
           />
         </Section>
 
@@ -269,18 +234,19 @@ const handleSubmit = async (e) => {
             name="schoolName"
             value={form.schoolName}
             onChange={handleChange}
+            required
           />
-
           <Input
             label="Matric Year"
             name="matricYear"
             type="number"
             value={form.matricYear}
             onChange={handleChange}
+            required
           />
         </Section>
 
-        {/* SUBJECTS */}
+        {/* SUBJECT MARKS */}
         <Section title="Matric Subjects & Marks">
           <div style={styles.subjectsWrapper}>
             {subjects.map((subject, index) => (
@@ -289,6 +255,7 @@ const handleSubmit = async (e) => {
                 style={{
                   ...styles.subjectRow,
                   flexDirection: isMobile ? "column" : "row",
+                  alignItems: isMobile ? "stretch" : "center",
                 }}
               >
                 <input
@@ -312,7 +279,10 @@ const handleSubmit = async (e) => {
 
                 <button
                   type="button"
-                  style={styles.removeBtn}
+                  style={{
+                    ...styles.removeBtn,
+                    width: isMobile ? "100%" : "auto",
+                  }}
                   onClick={() => removeSubject(index)}
                 >
                   −
@@ -321,7 +291,14 @@ const handleSubmit = async (e) => {
             ))}
           </div>
 
-          <button type="button" style={styles.addBtn} onClick={addSubject}>
+          <button
+            type="button"
+            style={{
+              ...styles.addBtn,
+              width: isMobile ? "100%" : "auto",
+            }}
+            onClick={addSubject}
+          >
             + Add Subject
           </button>
 
@@ -330,7 +307,7 @@ const handleSubmit = async (e) => {
           </div>
         </Section>
 
-        {/* EXTRA */}
+        {/* ADDITIONAL INFO */}
         <Section title="Additional Information">
           <Select
             label="Do you have a disability?"
@@ -354,14 +331,15 @@ const handleSubmit = async (e) => {
         </Section>
 
         <button type="submit" style={styles.saveBtn}>
-          {saving ? "Saving..." : "Save Profile"}
+          Save Profile
         </button>
       </form>
     </div>
   );
 };
 
-/* COMPONENTS */
+/* ---------- Reusable Components ---------- */
+
 const Section = ({ title, children }) => (
   <div style={styles.section}>
     <h3 style={styles.sectionTitle}>{title}</h3>
@@ -384,8 +362,6 @@ const Select = ({ label, children, ...props }) => (
     </select>
   </div>
 );
-
-
 
 /* ---------- Styles ---------- */
 
