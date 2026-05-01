@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 
@@ -7,12 +6,6 @@ import {
   persistentLocalCache,
   persistentMultipleTabManager,
 } from "firebase/firestore";
-=======
-import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
-import { getAnalytics } from "firebase/analytics";
->>>>>>> befd2cb14dbdeeebb059d1e3225dc1bce4480f88
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -29,7 +22,6 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-<<<<<<< HEAD
 
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
@@ -40,10 +32,3 @@ export const db = initializeFirestore(app, {
     tabManager: persistentMultipleTabManager(),
   }),
 });
-=======
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-
-export const auth = getAuth(app);
-export const db = getFirestore(app);
->>>>>>> befd2cb14dbdeeebb059d1e3225dc1bce4480f88
