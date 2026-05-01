@@ -1,12 +1,8 @@
 import "./styles.css";
 import { Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "./auth/auth";
-<<<<<<< HEAD
 import React, { useEffect } from "react";
 import { useState } from "react";
-=======
-
->>>>>>> befd2cb14dbdeeebb059d1e3225dc1bce4480f88
 import { PublicLayout } from "./PublicLayout";
 import { DashboardLayout } from "./dashboardLayout";
 import { Home } from "./Home_Page";
