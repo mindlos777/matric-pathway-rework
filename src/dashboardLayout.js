@@ -68,10 +68,6 @@ export const DashboardLayout = ({ children }) => {
 
       {/* MAIN AREA */}
       <div style={styles.main}>
-        {/* HEADER */}
-        <div style={styles.header}>
-          <h2 style={styles.pageTitle}>{/*title*/}</h2>
-        </div>
 
         {/* CONTENT */}
         <div style={styles.content}>{children}</div>
@@ -136,13 +132,7 @@ const styles = {
     minHeight: "100vh",
   },
 
-  header: {
-    background: "white",
-    padding: "20px",
-    borderBottom: "1px solid #e2e8f0",
-  },
-
   content: {
-    padding: "30px",
+    padding: "10px",
   },
 };
