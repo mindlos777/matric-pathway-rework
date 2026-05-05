@@ -3,14 +3,14 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDS3gfhWN8Vm6f9Qcg1F8R9YBhFYSxcZXo",
-  authDomain: "matric-pathway-b38d0.firebaseapp.com",
-  projectId: "matric-pathway-b38d0",
-  storageBucket: "matric-pathway-b38d0.firebasestorage.app",
-  messagingSenderId: "732356288177",
-  appId: "1:732356288177:web:3869121d480a8fce5a0c90",
-  measurementId: "G-LD43LK46GR",
+  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
 };
+
 
 const app = initializeApp(firebaseConfig);
 

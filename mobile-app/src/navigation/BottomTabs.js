@@ -1,5 +1,6 @@
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 
 // Screens
@@ -8,14 +9,18 @@ import CoursesScreen from "../screens/CoursesScreen";
 import UniversitiesScreen from "../screens/UniversitiesScreen";
 import BursariesScreen from "../screens/BursariesScreen";
 import ProfileScreen from "../screens/ProfileScreen";
+import WebViewScreen from "../screens/WebViewScreen"; // ✅ ADD THIS
 
 const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator();
 
-export default function BottomTabs() {
+
+// ---------------- TAB NAVIGATOR ----------------
+function Tabs() {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
-        headerShown: true, // keep top headers
+        headerShown: true,
         tabBarShowLabel: true,
 
         tabBarActiveTintColor: "#4F46E5",
@@ -39,7 +44,7 @@ export default function BottomTabs() {
           fontSize: 18,
         },
 
-        tabBarIcon: ({ focused, color, size }) => {
+        tabBarIcon: ({ focused, color }) => {
           let iconName;
 
           switch (route.name) {
@@ -67,40 +72,40 @@ export default function BottomTabs() {
               iconName = "ellipse-outline";
           }
 
-          return (
-            <Ionicons
-              name={iconName}
-              size={22}
-              color={color}
-            />
-          );
+          return <Ionicons name={iconName} size={22} color={color} />;
         },
       })}
     >
-      <Tab.Screen
-        name="Dashboard"
-        component={DashboardScreen}
-      />
-
-      <Tab.Screen
-        name="Courses"
-        component={CoursesScreen}
-      />
-
-      <Tab.Screen
-        name="Universities"
-        component={UniversitiesScreen}
-      />
-
-      <Tab.Screen
-        name="Bursaries"
-        component={BursariesScreen}
-      />
-
-      <Tab.Screen
-        name="Profile"
-        component={ProfileScreen}
-      />
+      <Tab.Screen name="Dashboard" component={DashboardScreen} />
+      <Tab.Screen name="Courses" component={CoursesScreen} />
+      <Tab.Screen name="Universities" component={UniversitiesScreen} />
+      <Tab.Screen name="Bursaries" component={BursariesScreen} />
+      <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
+  );
+}
+
+
+// ---------------- ROOT STACK ----------------
+export default function BottomTabs() {
+  return (
+    <Stack.Navigator>
+      {/* 🔥 MAIN APP (TABS) */}
+      <Stack.Screen
+        name="Main"
+        component={Tabs}
+        options={{ headerShown: false }}
+      />
+
+      {/* 🔥 WEBVIEW (OPENS ABOVE TABS) */}
+      <Stack.Screen
+        name="WebView"
+        component={WebViewScreen}
+        options={{
+          title: "Application Page",
+          headerBackTitle: "Back",
+        }}
+      />
+    </Stack.Navigator>
   );
 }
