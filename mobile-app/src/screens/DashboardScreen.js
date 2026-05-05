@@ -1,21 +1,57 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useEffect, useState } from "react";
+import WebViewScreen from "../screens/WebViewScreen";
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  ActivityIndicator,
 } from "react-native";
 
 import { useAuth } from "../auth/AuthContext";
 import { universities } from "../data/universityData";
 
-export default function DashboardScreen({ navigation }) {
-  const { user, apsScore, subjects } = useAuth();
+import { doc, onSnapshot } from "firebase/firestore";
+import { db } from "../firebase/firebase";
+import { Ionicons } from "@expo/vector-icons";
 
-  // ---------------- NAME EXTRACTION ----------------
+export default function DashboardScreen({ navigation }) {
+  const { user } = useAuth();
+
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // ---------------- REALTIME LISTENER ----------------
+  useEffect(() => {
+    if (!user?.uid) return;
+
+    const ref = doc(db, "users", user.uid);
+
+    const unsubscribe = onSnapshot(
+      ref,
+      (snap) => {
+        if (snap.exists()) {
+          setProfile(snap.data());
+        }
+        setLoading(false);
+      },
+      (error) => {
+        console.log("Realtime error:", error);
+        setLoading(false);
+      }
+    );
+
+    return () => unsubscribe(); // cleanup
+  }, [user]);
+
+  // ---------------- SAFE VALUES ----------------
+  const apsScore = profile?.apsScore ?? null;
+  const subjects = profile?.subjects ?? [];
+
+  // ---------------- NAME ----------------
   const displayName =
-    user?.displayName ||
+    profile?.firstName ||
     user?.email?.split("@")[0] ||
     "Student";
 
@@ -23,13 +59,13 @@ export default function DashboardScreen({ navigation }) {
   const profileProgress = useMemo(() => {
     let score = 0;
 
-    if (user?.email) score += 20;
+    if (profile?.email) score += 20;
     if (apsScore) score += 30;
-    if (subjects?.length > 0) score += 30;
-    if (user?.phoneNumber) score += 20;
+    if (subjects.length > 0) score += 30;
+    if (profile?.phone) score += 20;
 
     return score;
-  }, [user, apsScore, subjects]);
+  }, [profile, apsScore, subjects]);
 
   // ---------------- QUALIFIED UNIVERSITIES ----------------
   const qualified = useMemo(() => {
@@ -40,12 +76,20 @@ export default function DashboardScreen({ navigation }) {
     );
   }, [apsScore]);
 
+  // ---------------- LOADING ----------------
+  if (loading) {
+    return (
+      <View style={styles.loader}>
+        <ActivityIndicator size="large" color="#4F46E5" />
+      </View>
+    );
+  }
+
   return (
     <ScrollView
       style={styles.container}
       contentContainerStyle={{ paddingBottom: 120 }}
     >
-
       {/* HEADER */}
       <Text style={styles.title}>
         Welcome, {displayName}
@@ -100,12 +144,28 @@ export default function DashboardScreen({ navigation }) {
 
       {qualified.length > 0 ? (
         qualified.slice(0, 3).map((u) => (
-          <View key={u.id} style={styles.uniCard}>
-            <Text style={styles.uniName}>{u.name}</Text>
-            <Text style={styles.uniMeta}>
-              Min APS: {u.minAPS}
-            </Text>
-          </View>
+          <TouchableOpacity
+            key={u.id}
+            style={styles.uniCard}
+            onPress={() =>
+              navigation.navigate("WebView", {
+                url: u.applyLink,
+              })
+            }
+            activeOpacity={0.7}
+          >
+            <View style={styles.uniRow}>
+              <View>
+                <Text style={styles.uniName}>{u.name}</Text>
+                <Text style={styles.uniMeta}>
+                  Min APS: {u.minAPS}
+                </Text>
+              </View>
+
+              {/* RIGHT ARROW */}
+              <Ionicons name="chevron-forward" size={20} color="#999" />
+            </View>
+          </TouchableOpacity>
         ))
       ) : (
         <Text style={styles.emptyText}>
@@ -144,7 +204,6 @@ export default function DashboardScreen({ navigation }) {
           Find Bursaries
         </Text>
       </TouchableOpacity>
-
     </ScrollView>
   );
 }
@@ -154,6 +213,12 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     backgroundColor: "#fff",
+  },
+
+  loader: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   title: {
@@ -248,6 +313,18 @@ const styles = StyleSheet.create({
   emptyText: {
     color: "#999",
     fontStyle: "italic",
+  },
+
+  uniRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+
+  arrow: {
+    fontSize: 20,
+    color: "#999",
+    fontWeight: "bold",
   },
 
   actionCard: {

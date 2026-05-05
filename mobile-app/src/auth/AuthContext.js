@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 
 import { auth, db } from "../firebase/firebase";
 import {
@@ -8,154 +8,108 @@ import {
   onAuthStateChanged,
 } from "firebase/auth";
 
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import {
+  doc,
+  onSnapshot,
+  setDoc,
+} from "firebase/firestore";
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-
-  // ---------------- PROFILE DATA ----------------
-  const [apsScore, setApsScoreState] = useState(null);
-
-  // IMPORTANT: standardized format
-  const [subjects, setSubjectsState] = useState([]);
-
-  const [field, setField] = useState(null); // future: user career interest
-
+  const [profileData, setProfileData] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  // ---------------- REGISTER ----------------
+  const triggerRefresh = () => {
+    setRefreshKey((prev) => prev + 1);
+  };
+  // ---------------- AUTH ----------------
   const register = async (email, password) => {
     try {
       await createUserWithEmailAndPassword(auth, email, password);
       return { success: true };
-    } catch (error) {
-      return { success: false, message: error.message };
+    } catch (e) {
+      return { success: false, message: e.message };
     }
   };
 
-  // ---------------- LOGIN ----------------
   const login = async (email, password) => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       return { success: true };
-    } catch (error) {
-      return { success: false, message: error.message };
+    } catch (e) {
+      return { success: false, message: e.message };
     }
   };
 
-  // ---------------- LOGOUT ----------------
   const logout = async () => {
     await signOut(auth);
-
     setUser(null);
-    setApsScoreState(null);
-    setSubjectsState([]);
-    setField(null);
+    setProfileData(null);
   };
 
-  // ---------------- SAVE APS ----------------
-  const setApsScore = async (score) => {
-    setApsScoreState(score);
+  // ---------------- SAVE PROFILE ----------------
+  const saveProfile = async (data) => {
+    if (!auth.currentUser) return;
 
-    if (auth.currentUser) {
-      await setDoc(
-        doc(db, "users", auth.currentUser.uid),
-        { apsScore: score },
-        { merge: true }
-      );
-    }
+    await setDoc(
+      doc(db, "users", auth.currentUser.uid),
+      data,
+      { merge: true }
+    );
   };
 
-  // ---------------- SAVE SUBJECTS ----------------
-  const setSubjects = async (newSubjects) => {
-    setSubjectsState(newSubjects);
-
-    if (auth.currentUser) {
-      await setDoc(
-        doc(db, "users", auth.currentUser.uid),
-        { subjects: newSubjects },
-        { merge: true }
-      );
-    }
-  };
-
-  // ---------------- SAVE FIELD ----------------
-  const setUserField = async (newField) => {
-    setField(newField);
-
-    if (auth.currentUser) {
-      await setDoc(
-        doc(db, "users", auth.currentUser.uid),
-        { field: newField },
-        { merge: true }
-      );
-    }
-  };
-
-  // ---------------- AUTH LISTENER ----------------
+  // ---------------- REAL-TIME LISTENER ----------------
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      try {
-        if (firebaseUser) {
-          setUser(firebaseUser);
+    let unsubscribeProfile = null;
 
-          const ref = doc(db, "users", firebaseUser.uid);
-          const snap = await getDoc(ref);
+    const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
+      if (firebaseUser) {
+        setUser(firebaseUser);
 
+        const ref = doc(db, "users", firebaseUser.uid);
+
+        // 🔥 REAL-TIME FIRESTORE SYNC
+        unsubscribeProfile = onSnapshot(ref, (snap) => {
           if (snap.exists()) {
-            const data = snap.data();
-
-            setApsScoreState(data.apsScore || null);
-
-            // SAFE DEFAULTS (IMPORTANT FIX)
-            setSubjectsState(data.subjects || []);
-
-            setField(data.field || null);
+            setProfileData(snap.data());
           } else {
-            // create empty profile if none exists
-            await setDoc(ref, {
-              apsScore: null,
+            // create empty profile
+            setDoc(ref, {
+              email: firebaseUser.email,
               subjects: [],
-              field: null,
+              apsScore: 0,
             });
           }
-        } else {
-          setUser(null);
-          setApsScoreState(null);
-          setSubjectsState([]);
-          setField(null);
-        }
-      } catch (error) {
-        console.log("Auth error:", error.message);
+          setLoading(false);
+        });
+      } else {
+        setUser(null);
+        setProfileData(null);
+        setLoading(false);
       }
-
-      setLoading(false);
     });
 
-    return unsubscribe;
+    return () => {
+      unsubscribeAuth();
+      if (unsubscribeProfile) unsubscribeProfile();
+    };
   }, []);
 
   return (
     <AuthContext.Provider
       value={{
-        // auth
         user,
+        profileData,
         loading,
         login,
         register,
         logout,
-
-        // profile
-        apsScore,
-        setApsScore,
-
-        subjects,
-        setSubjects,
-
-        field,
-        setUserField,
+        saveProfile,
+        refreshKey,
+        triggerRefresh,
       }}
     >
       {children}
