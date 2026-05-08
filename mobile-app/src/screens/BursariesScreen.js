@@ -11,7 +11,7 @@ import {
 
 import { bursaryData } from "../data/bursaryData";
 
-export default function BursariesScreen() {
+export default function BursariesScreen({ navigation }) {
   const [search, setSearch] = useState("");
   const [showFilters, setShowFilters] = useState(false);
 
@@ -22,7 +22,7 @@ export default function BursariesScreen() {
     fund: null,
   });
 
-  // ---------------- FILTER LOGIC ----------------
+  // ---------------- FILTER ----------------
   const filtered = useMemo(() => {
     return (bursaryData || []).filter((b) => {
       const matchSearch =
@@ -57,6 +57,13 @@ export default function BursariesScreen() {
     }));
   };
 
+  // ---------------- OPEN WEBVIEW ----------------
+  const openApplyPage = (url) => {
+    if (!url) return;
+
+    navigation.navigate("WebViewScreen", { url });
+  };
+
   return (
     <View style={{ flex: 1, padding: 15 }}>
 
@@ -88,6 +95,19 @@ export default function BursariesScreen() {
           Filters
         </Text>
       </TouchableOpacity>
+      <TouchableOpacity
+        onPress={() => navigation.navigate("Templates")}
+        style={{
+          backgroundColor: "#111",
+          padding: 10,
+          borderRadius: 8,
+          marginBottom: 10,
+        }}
+      >
+        <Text style={{ color: "#fff", textAlign: "center" }}>
+          Templates (CV & Email)
+        </Text>
+      </TouchableOpacity>
 
       {/* LIST */}
       <FlatList
@@ -99,7 +119,9 @@ export default function BursariesScreen() {
           </Text>
         }
         renderItem={({ item }) => (
-          <View
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => openApplyPage(item.link)}
             style={{
               padding: 15,
               borderWidth: 1,
@@ -108,8 +130,7 @@ export default function BursariesScreen() {
               marginBottom: 10,
             }}
           >
-
-            {/* NAME + BADGE */}
+            {/* HEADER */}
             <View style={{
               flexDirection: "row",
               alignItems: "center",
@@ -140,7 +161,7 @@ export default function BursariesScreen() {
 
             {/* APPLY BUTTON */}
             <TouchableOpacity
-              onPress={() => {}}
+              onPress={() => openApplyPage(item.link)}
               style={{
                 marginTop: 10,
                 backgroundColor: "#4F46E5",
@@ -152,8 +173,7 @@ export default function BursariesScreen() {
                 Apply
               </Text>
             </TouchableOpacity>
-
-          </View>
+          </TouchableOpacity>
         )}
       />
 
@@ -237,7 +257,7 @@ export default function BursariesScreen() {
               </TouchableOpacity>
             ))}
 
-            {/* EMAIL AUTO APPLY */}
+            {/* AUTO APPLY */}
             <TouchableOpacity
               onPress={() =>
                 setFilters((p) => ({
@@ -278,7 +298,6 @@ export default function BursariesScreen() {
           </View>
         </View>
       </Modal>
-
     </View>
   );
 }

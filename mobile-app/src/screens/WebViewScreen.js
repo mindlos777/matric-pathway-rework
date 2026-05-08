@@ -1,47 +1,19 @@
-import React, { useState } from "react";
-import {
-  View,
-  ActivityIndicator,
-  StyleSheet,
-  TouchableOpacity,
-  Text,
-} from "react-native";
+import React from "react";
+import { ActivityIndicator, View } from "react-native";
 import { WebView } from "react-native-webview";
-import { Ionicons } from "@expo/vector-icons";
 
-export default function WebViewScreen({ route, navigation }) {
-  const { url, title } = route.params;
-
-  const [loading, setLoading] = useState(true);
+export default function WebViewScreen({ route }) {
+  const { url } = route.params;
 
   return (
-    <View style={{ flex: 1 }}>
-
-      {/* LOADER */}
-      {loading && (
-        <ActivityIndicator
-          size="large"
-          color="#4F46E5"
-          style={styles.loader}
-        />
+    <WebView
+      source={{ uri: url }}
+      startInLoadingState
+      renderLoading={() => (
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+          <ActivityIndicator size="large" color="#4F46E5" />
+        </View>
       )}
-
-      {/* WEBVIEW */}
-      <WebView
-        source={{ uri: url }}
-        onLoadEnd={() => setLoading(false)}
-        startInLoadingState
-      />
-    </View>
+    />
   );
 }
-
-const styles = StyleSheet.create({
-
-  loader: {
-    position: "absolute",
-    top: "50%",
-    left: "50%",
-    marginLeft: -10,
-  },
-});

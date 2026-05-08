@@ -6,13 +6,13 @@ import {
   TouchableOpacity,
   TextInput,
   Modal,
-  Animated,
+  Alert,
 } from "react-native";
 
 import { universities } from "../data/universityData";
 import { useAuth } from "../auth/AuthContext";
 
-export default function UniversitiesScreen() {
+export default function UniversitiesScreen({ navigation }) {
   const { apsScore } = useAuth();
 
   const [search, setSearch] = useState("");
@@ -24,6 +24,18 @@ export default function UniversitiesScreen() {
     topRated: false,
     basedOnAPS: false,
   });
+
+  // ---------------- OPEN APPLY PAGE (IN-APP WEBVIEW) ----------------
+  const openApplyPage = (url) => {
+    if (!url) {
+      Alert.alert("Error", "Application link not available");
+      return;
+    }
+
+    navigation.navigate("WebView", {
+      url,
+    });
+  };
 
   // ---------------- FILTER LOGIC ----------------
   const filtered = useMemo(() => {
@@ -49,7 +61,6 @@ export default function UniversitiesScreen() {
     let list = [...filtered];
 
     if (filters.topRated) {
-      // placeholder rating logic (you can replace later)
       list.sort((a, b) => (b.minAPS || 0) - (a.minAPS || 0));
     }
 
@@ -67,7 +78,7 @@ export default function UniversitiesScreen() {
   return (
     <View style={{ flex: 1, padding: 15 }}>
 
-      {/* SEARCH BAR (ALWAYS VISIBLE) */}
+      {/* SEARCH */}
       <TextInput
         placeholder="Search universities..."
         value={search}
@@ -96,7 +107,7 @@ export default function UniversitiesScreen() {
         </Text>
       </TouchableOpacity>
 
-      {/* UNIVERSITIES LIST */}
+      {/* LIST */}
       <FlatList
         data={sorted}
         keyExtractor={(item) => item.id}
@@ -118,8 +129,9 @@ export default function UniversitiesScreen() {
             <Text>Min APS: {item.minAPS}</Text>
             <Text>Status: {item.status}</Text>
 
-            {/* APPLY BUTTON */}
+            {/* ✅ APPLY BUTTON (NOW WORKS) */}
             <TouchableOpacity
+              onPress={() => openApplyPage(item.applyLink)}
               style={{
                 marginTop: 10,
                 backgroundColor: "#4F46E5",
@@ -135,7 +147,7 @@ export default function UniversitiesScreen() {
         )}
       />
 
-      {/* ---------------- FILTER MODAL (BOTTOM SHEET STYLE) ---------------- */}
+      {/* ---------------- FILTER MODAL ---------------- */}
       <Modal visible={showFilters} animationType="slide" transparent>
         <View style={{
           flex: 1,
@@ -166,7 +178,7 @@ export default function UniversitiesScreen() {
               </TouchableOpacity>
             </View>
 
-            {/* TYPE DROPDOWN (SIMPLIFIED) */}
+            {/* TYPE */}
             <Text style={{ fontWeight: "bold" }}>Type</Text>
 
             {["University", "Private", "TVET"].map((t) => (
@@ -260,7 +272,7 @@ export default function UniversitiesScreen() {
 
             </View>
 
-            {/* APPLY BUTTON */}
+            {/* APPLY FILTERS */}
             <TouchableOpacity
               onPress={() => setShowFilters(false)}
               style={{
