@@ -1,8 +1,8 @@
-import React, { useMemo, useEffect, useState } from "react";
-import WebViewScreen from "../screens/WebViewScreen";
+import React, { useMemo, useEffect, useState, useLayoutEffect } from "react";
 import {
   View,
   Text,
+  Image,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
@@ -21,6 +21,42 @@ export default function DashboardScreen({ navigation }) {
 
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [unreadCount, setUnreadCount] = useState(3);
+
+  // ✅ HEADER ICONS (NOTIFICATIONS + SETTINGS)
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+
+          {/* NOTIFICATIONS */}
+          <TouchableOpacity
+            onPress={() => navigation.navigate("Notifications")}
+            style={{ marginRight: 15 }}
+          >
+            <Ionicons
+              name="notifications-outline"
+              size={24}
+              color="#000"
+            />
+          </TouchableOpacity>
+
+          {/* SETTINGS */}
+          <TouchableOpacity
+            onPress={() => navigation.navigate("Settings")}
+            style={{ marginRight: 5 }}
+          >
+            <Ionicons
+              name="settings-outline"
+              size={24}
+              color="#000"
+            />
+          </TouchableOpacity>
+
+        </View>
+      ),
+    });
+  }, [navigation]);
 
   // ---------------- REALTIME LISTENER ----------------
   useEffect(() => {
@@ -42,7 +78,7 @@ export default function DashboardScreen({ navigation }) {
       }
     );
 
-    return () => unsubscribe(); // cleanup
+    return () => unsubscribe();
   }, [user]);
 
   // ---------------- SAFE VALUES ----------------
@@ -91,12 +127,15 @@ export default function DashboardScreen({ navigation }) {
       contentContainerStyle={{ paddingBottom: 120 }}
     >
       {/* HEADER */}
-      <Text style={styles.title}>
-        Welcome, {displayName}
-      </Text>
+      <View style={styles.headerRow}>
+        <Text style={styles.title}>
+          <Image style={{ width: 50, height: 50}} source={require('../theme/app_logo.png')} />
+          Welcome, {displayName}
+        </Text>
+      </View>
 
       <Text style={styles.subtitle}>
-        Let’s build your future today
+        .             Let’s build your future today
       </Text>
 
       {/* APS CARD */}
@@ -162,7 +201,6 @@ export default function DashboardScreen({ navigation }) {
                 </Text>
               </View>
 
-              {/* RIGHT ARROW */}
               <Ionicons name="chevron-forward" size={20} color="#999" />
             </View>
           </TouchableOpacity>
@@ -319,12 +357,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-  },
-
-  arrow: {
-    fontSize: 20,
-    color: "#999",
-    fontWeight: "bold",
   },
 
   actionCard: {

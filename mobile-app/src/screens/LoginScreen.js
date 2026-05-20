@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  Image,
 } from "react-native";
 
 import { useAuth } from "../auth/AuthContext";
@@ -38,6 +39,7 @@ export default function LoginScreen({ navigation }) {
   
   return (
     <View style={styles.container}>
+      <Image style={{ width: 300, height: 150, marginLeft:15}} source={require('../theme/app_logo.png')} />
       <Text style={styles.title}>EduMatch</Text>
       <Text style={styles.subtitle}>Login to continue</Text>
 

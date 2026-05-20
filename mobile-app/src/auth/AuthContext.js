@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 
 import { auth, db } from "../firebase/firebase";
+
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -22,92 +23,177 @@ export const AuthProvider = ({ children }) => {
   const [refreshKey, setRefreshKey] = useState(0);
   const [loading, setLoading] = useState(true);
 
+  // ================= REFRESH =================
   const triggerRefresh = () => {
     setRefreshKey((prev) => prev + 1);
   };
-  // ---------------- AUTH ----------------
+
+  // ================= SAFE VALUES =================
+  const apsScore = Number(profileData?.apsScore || 0);
+
+  const subjects = Array.isArray(profileData?.subjects)
+    ? profileData.subjects
+    : [];
+
+  // ================= REGISTER =================
   const register = async (email, password) => {
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+
       return { success: true };
     } catch (e) {
-      return { success: false, message: e.message };
+      return {
+        success: false,
+        message: e.message,
+      };
     }
   };
 
+  // ================= LOGIN =================
   const login = async (email, password) => {
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+
       return { success: true };
     } catch (e) {
-      return { success: false, message: e.message };
+      return {
+        success: false,
+        message: e.message,
+      };
     }
   };
 
+  // ================= LOGOUT =================
   const logout = async () => {
     await signOut(auth);
+
     setUser(null);
     setProfileData(null);
   };
 
-  // ---------------- SAVE PROFILE ----------------
+  // ================= SAVE PROFILE =================
   const saveProfile = async (data) => {
     if (!auth.currentUser) return;
 
-    await setDoc(
-      doc(db, "users", auth.currentUser.uid),
-      data,
-      { merge: true }
-    );
+    try {
+      await setDoc(
+        doc(db, "users", auth.currentUser.uid),
+        data,
+        { merge: true }
+      );
+    } catch (error) {
+      console.log("Save profile error:", error);
+    }
   };
 
-  // ---------------- REAL-TIME LISTENER ----------------
+  // ================= REALTIME AUTH + PROFILE =================
   useEffect(() => {
     let unsubscribeProfile = null;
 
-    const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
-      if (firebaseUser) {
-        setUser(firebaseUser);
+    const unsubscribeAuth = onAuthStateChanged(
+      auth,
+      async (firebaseUser) => {
+        if (firebaseUser) {
+          setUser(firebaseUser);
 
-        const ref = doc(db, "users", firebaseUser.uid);
+          const ref = doc(
+            db,
+            "users",
+            firebaseUser.uid
+          );
 
-        // 🔥 REAL-TIME FIRESTORE SYNC
-        unsubscribeProfile = onSnapshot(ref, (snap) => {
-          if (snap.exists()) {
-            setProfileData(snap.data());
-          } else {
-            // create empty profile
-            setDoc(ref, {
-              email: firebaseUser.email,
-              subjects: [],
-              apsScore: 0,
-            });
-          }
+          // 🔥 REALTIME PROFILE LISTENER
+          unsubscribeProfile = onSnapshot(
+            ref,
+            async (snap) => {
+              if (snap.exists()) {
+                const data = snap.data();
+
+                setProfileData({
+                  ...data,
+
+                  // ensure safe defaults
+                  apsScore: Number(
+                    data?.apsScore || 0
+                  ),
+
+                  subjects: Array.isArray(
+                    data?.subjects
+                  )
+                    ? data.subjects
+                    : [],
+                });
+              } else {
+                // create default profile
+                const starterProfile = {
+                  email: firebaseUser.email,
+                  firstName: "",
+                  lastName: "",
+                  phone: "",
+                  apsScore: 0,
+                  subjects: [],
+                };
+
+                await setDoc(ref, starterProfile);
+
+                setProfileData(starterProfile);
+              }
+
+              setLoading(false);
+            },
+            (error) => {
+              console.log(
+                "Realtime profile error:",
+                error
+              );
+
+              setLoading(false);
+            }
+          );
+        } else {
+          setUser(null);
+          setProfileData(null);
           setLoading(false);
-        });
-      } else {
-        setUser(null);
-        setProfileData(null);
-        setLoading(false);
+        }
       }
-    });
+    );
 
     return () => {
       unsubscribeAuth();
-      if (unsubscribeProfile) unsubscribeProfile();
+
+      if (unsubscribeProfile) {
+        unsubscribeProfile();
+      }
     };
   }, []);
 
   return (
     <AuthContext.Provider
       value={{
+        // auth
         user,
-        profileData,
         loading,
+
+        // profile
+        profileData,
+        apsScore,
+        subjects,
+
+        // actions
         login,
         register,
         logout,
         saveProfile,
+
+        // refresh
         refreshKey,
         triggerRefresh,
       }}

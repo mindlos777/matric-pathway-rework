@@ -1,4 +1,5 @@
 import React from "react";
+import { View } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
@@ -9,7 +10,12 @@ import CoursesScreen from "../screens/CoursesScreen";
 import UniversitiesScreen from "../screens/UniversitiesScreen";
 import BursariesScreen from "../screens/BursariesScreen";
 import ProfileScreen from "../screens/ProfileScreen";
-import WebViewScreen from "../screens/WebViewScreen"; // ✅ ADD THIS
+import WebViewScreen from "../screens/WebViewScreen";
+import SettingsScreen from "../screens/SettingsScreen";
+import NotificationsScreen from "../screens/NotificationsScreen";
+
+// Chatbot
+import FloatingChatbot from "../components/FloatingChatbot";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -21,8 +27,6 @@ function Tabs() {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: true,
-        tabBarShowLabel: true,
-
         tabBarActiveTintColor: "#4F46E5",
         tabBarInactiveTintColor: "#888",
 
@@ -31,17 +35,10 @@ function Tabs() {
           paddingBottom: 8,
           paddingTop: 6,
           borderTopWidth: 1,
-          borderTopColor: "#eee",
-          backgroundColor: "#fff",
-        },
-
-        headerStyle: {
-          backgroundColor: "#fff",
-        },
-
-        headerTitleStyle: {
-          fontWeight: "700",
-          fontSize: 18,
+          borderTopColor: "#eeeeee",
+          backgroundColor: "#ffffff6d",
+          borderRadius: 50,
+          marginBottom: 5,
         },
 
         tabBarIcon: ({ focused, color }) => {
@@ -51,23 +48,18 @@ function Tabs() {
             case "Dashboard":
               iconName = focused ? "home" : "home-outline";
               break;
-
             case "Courses":
               iconName = focused ? "book" : "book-outline";
               break;
-
             case "Universities":
               iconName = focused ? "school" : "school-outline";
               break;
-
             case "Bursaries":
               iconName = focused ? "cash" : "cash-outline";
               break;
-
             case "Profile":
               iconName = focused ? "person" : "person-outline";
               break;
-
             default:
               iconName = "ellipse-outline";
           }
@@ -89,23 +81,39 @@ function Tabs() {
 // ---------------- ROOT STACK ----------------
 export default function BottomTabs() {
   return (
-    <Stack.Navigator>
-      {/* 🔥 MAIN APP (TABS) */}
-      <Stack.Screen
-        name="Main"
-        component={Tabs}
-        options={{ headerShown: false }}
-      />
+    <View style={{ flex: 1 }}>
 
-      {/* 🔥 WEBVIEW (OPENS ABOVE TABS) */}
-      <Stack.Screen
-        name="WebView"
-        component={WebViewScreen}
-        options={{
-          title: "Application Page",
-          headerBackTitle: "Back",
-        }}
-      />
-    </Stack.Navigator>
+      {/* NAVIGATION */}
+      <Stack.Navigator>
+        <Stack.Screen
+          name="Main"
+          component={Tabs}
+          options={{ headerShown: false }}
+        />
+
+        <Stack.Screen
+          name="WebView"
+          component={WebViewScreen}
+          options={{
+            title: "Application Page",
+            headerBackTitle: "Back",
+          }}
+        />
+
+        <Stack.Screen name="Settings" component={SettingsScreen} />
+
+        <Stack.Screen
+          name="Notifications"
+          component={NotificationsScreen}
+          options={{
+            title: "Notifications",
+          }}
+        />
+      </Stack.Navigator>
+
+      {/*FLOATING CHATBOT (GLOBAL) */}
+      <FloatingChatbot />
+
+    </View>
   );
 }
