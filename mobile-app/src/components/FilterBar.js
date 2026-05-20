@@ -1,87 +1,100 @@
 import React from "react";
-import { View, TextInput, StyleSheet, TouchableOpacity, Text } from "react-native";
+import {
+  View,
+  TextInput,
+  TouchableOpacity,
+} from "react-native";
 
-export default function FilterBar({
+import { Ionicons } from "@expo/vector-icons";
+
+export default function SearchFilterBar({
   search,
   setSearch,
-  filters = [],
-  activeFilters = {},
-  setActiveFilters,
+  onFilterPress,
+  placeholder = "Search",
 }) {
-  const toggleFilter = (key, value) => {
-    setActiveFilters((prev) => ({
-      ...prev,
-      [key]: prev[key] === value ? null : value,
-    }));
-  };
-
   return (
-    <View style={styles.container}>
-      {/* SEARCH (GLOBAL FOR ALL SCREENS) */}
-      <TextInput
-        placeholder="Search..."
-        value={search}
-        onChangeText={setSearch}
-        style={styles.search}
-      />
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        marginBottom: 15,
+      }}
+    >
 
-      {/* FILTER CHIPS */}
-      <View style={styles.filterRow}>
-        {filters.map((filter) => (
-          <TouchableOpacity
-            key={filter.key}
-            style={[
-              styles.chip,
-              activeFilters[filter.key] === filter.value && styles.activeChip,
-            ]}
-            onPress={() => toggleFilter(filter.key, filter.value)}
-          >
-            <Text
-              style={{
-                color:
-                  activeFilters[filter.key] === filter.value
-                    ? "#fff"
-                    : "#333",
-              }}
-            >
-              {filter.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
+      {/* SEARCH */}
+      <View
+        style={{
+          flex: 1,
+          flexDirection: "row",
+          alignItems: "center",
+          backgroundColor: "#F5F5F5",
+          borderRadius: 30,
+          paddingHorizontal: 15,
+          height: 52,
+          marginRight: 10,
+
+          shadowColor: "#000",
+          shadowOpacity: 0.04,
+          shadowRadius: 4,
+          shadowOffset: {
+            width: 0,
+            height: 2,
+          },
+
+          elevation: 2,
+        }}
+      >
+        <Ionicons
+          name="search-outline"
+          size={20}
+          color="#777"
+        />
+
+        <TextInput
+          placeholder={placeholder}
+          placeholderTextColor="#888"
+          value={search}
+          onChangeText={setSearch}
+          style={{
+            flex: 1,
+            marginLeft: 10,
+            fontSize: 15,
+            color: "#111",
+          }}
+        />
       </View>
+
+      {/* FILTER BUTTON */}
+      <TouchableOpacity
+        onPress={onFilterPress}
+        activeOpacity={0.8}
+        style={{
+          width: 52,
+          height: 52,
+          borderRadius: 26,
+          backgroundColor: "#111",
+          justifyContent: "center",
+          alignItems: "center",
+
+          shadowColor: "#000",
+          shadowOpacity: 0.15,
+          shadowRadius: 6,
+          shadowOffset: {
+            width: 0,
+            height: 3,
+          },
+
+          elevation: 4,
+        }}
+      >
+        <Ionicons
+          name="options-outline"
+          size={22}
+          color="#fff"
+        />
+      </TouchableOpacity>
+
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    marginBottom: 10,
-  },
-
-  search: {
-    borderWidth: 1,
-    borderColor: "#ddd",
-    padding: 10,
-    borderRadius: 10,
-    marginBottom: 10,
-  },
-
-  filterRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-
-  chip: {
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: "#ddd",
-  },
-
-  activeChip: {
-    backgroundColor: "#4F46E5",
-    borderColor: "#4F46E5",
-  },
-});

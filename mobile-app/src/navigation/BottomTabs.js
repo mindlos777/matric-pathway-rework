@@ -35,8 +35,10 @@ function Tabs() {
           paddingBottom: 8,
           paddingTop: 6,
           borderTopWidth: 1,
-          borderTopColor: "#eee",
-          backgroundColor: "#fff",
+          borderTopColor: "#eeeeee",
+          backgroundColor: "#ffffff6d",
+          borderRadius: 50,
+          marginBottom: 5,
         },
 
         tabBarIcon: ({ focused, color }) => {

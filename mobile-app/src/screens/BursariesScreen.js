@@ -10,6 +10,7 @@ import {
 } from "react-native";
 
 import { bursaryData } from "../data/bursaryData";
+import SearchFilterBar from "../components/FilterBar";
 
 export default function BursariesScreen({ navigation }) {
   const [search, setSearch] = useState("");
@@ -67,34 +68,12 @@ export default function BursariesScreen({ navigation }) {
   return (
     <View style={{ flex: 1, padding: 15 }}>
 
-      {/* SEARCH */}
-      <TextInput
+      <SearchFilterBar
+        search={search}
+        setSearch={setSearch}
+        onFilterPress={() => setShowFilters(true)}
         placeholder="Search bursaries..."
-        value={search}
-        onChangeText={setSearch}
-        style={{
-          borderWidth: 1,
-          borderColor: "#ddd",
-          padding: 12,
-          borderRadius: 10,
-          marginBottom: 10,
-        }}
       />
-
-      {/* FILTER BUTTON */}
-      <TouchableOpacity
-        onPress={() => setShowFilters(true)}
-        style={{
-          backgroundColor: "#4F46E5",
-          padding: 10,
-          borderRadius: 8,
-          marginBottom: 10,
-        }}
-      >
-        <Text style={{ color: "#fff", textAlign: "center" }}>
-          Filters
-        </Text>
-      </TouchableOpacity>
       <TouchableOpacity
         onPress={() => navigation.navigate("Templates")}
         style={{

@@ -10,6 +10,7 @@ import BottomTabs from "./src/navigation/BottomTabs";
 import WebViewScreen from "./src/screens/WebViewScreen";
 import TemplatesScreen from "./src/screens/TemplatesScreen";
 import TemplateViewerScreen from "./src/screens/TemplateViewerScreen";
+//import "./src/data/uploadUniversitie";
 
 const Stack = createNativeStackNavigator();
 

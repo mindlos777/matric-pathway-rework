@@ -2,6 +2,7 @@ import React, { useMemo, useEffect, useState, useLayoutEffect } from "react";
 import {
   View,
   Text,
+  Image,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
@@ -20,6 +21,7 @@ export default function DashboardScreen({ navigation }) {
 
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [unreadCount, setUnreadCount] = useState(3);
 
   // ✅ HEADER ICONS (NOTIFICATIONS + SETTINGS)
   useLayoutEffect(() => {
@@ -125,14 +127,15 @@ export default function DashboardScreen({ navigation }) {
       contentContainerStyle={{ paddingBottom: 120 }}
     >
       {/* HEADER */}
-<View style={styles.headerRow}>
-  <Text style={styles.title}>
-    Welcome, {displayName}
-  </Text>
-</View>
+      <View style={styles.headerRow}>
+        <Text style={styles.title}>
+          <Image style={{ width: 50, height: 50}} source={require('../theme/app_logo.png')} />
+          Welcome, {displayName}
+        </Text>
+      </View>
 
       <Text style={styles.subtitle}>
-        Let’s build your future today
+        .             Let’s build your future today
       </Text>
 
       {/* APS CARD */}
