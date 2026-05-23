@@ -23,7 +23,7 @@ export default function DashboardScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(3);
 
-  // ✅ HEADER ICONS (NOTIFICATIONS + SETTINGS)
+  //HEADER ICONS (NOTIFICATIONS + SETTINGS)
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
