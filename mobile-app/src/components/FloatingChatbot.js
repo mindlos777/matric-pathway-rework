@@ -15,7 +15,7 @@ export default function FloatingChatbot() {
 
   const [visible, setVisible] = useState(false);
 
-  // ✅ Get current route
+  // Get current route
   const routeName = useNavigationState((state) => {
     const route = state.routes[state.index];
 
@@ -28,8 +28,8 @@ export default function FloatingChatbot() {
     return route.name;
   });
 
-  // ❌ HIDE on Profile screen
-  if (routeName === "Profile") return null;
+  // HIDE on Profile screen
+  //if (routeName === "Profile") return null;
 
   // ---------------- DRAG ----------------
   const panResponder = useRef(
@@ -94,7 +94,7 @@ export default function FloatingChatbot() {
 const styles = StyleSheet.create({
   floating: {
     position: "absolute",
-    bottom: 90, // 👈 above navbar
+    bottom: 90,
     right: 20,
     zIndex: 999,
   },

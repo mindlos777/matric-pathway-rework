@@ -32,22 +32,22 @@ export default function WebViewScreen({
   const [loading, setLoading] =
     useState(true);
 
-  // ================= CUSTOM TOP BACK =================
+  // ------------------ CUSTOM TOP BACK ------------------
   const handleTopBack = () => {
     navigation.goBack();
   };
 
-  // ================= RELOAD =================
+  // ------------------ RELOAD ------------------
   const handleReload = () => {
     webViewRef.current?.reload();
   };
 
-  // ================= OPEN EXTERNAL =================
+  // ------------------ OPEN EXTERNAL ------------------
   const handleOpenBrowser = async () => {
     await Linking.openURL(url);
   };
 
-  // ================= ANDROID HARDWARE BACK =================
+  // ------------------ ANDROID HARDWARE BACK ------------------
   useEffect(() => {
     const onBackPress = () => {
       if (canGoBack) {
@@ -69,7 +69,7 @@ export default function WebViewScreen({
     return () => subscription.remove();
   }, [canGoBack]);
 
-  // ================= DISABLE HEADER GESTURE BACK =================
+  // ------------------ DISABLE HEADER GESTURE BACK ------------------
   useEffect(() => {
     navigation.setOptions({
       gestureEnabled: false,
@@ -174,6 +174,7 @@ const styles = StyleSheet.create({
   },
 
   topBar: {
+    marginTop: 30,
     height: 60,
     paddingHorizontal: 10,
     borderBottomWidth: 1,

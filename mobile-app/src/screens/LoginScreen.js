@@ -31,7 +31,7 @@ export default function LoginScreen({ navigation }) {
     setLoading(false);
 
     if (result.success) {
-      navigation.replace("MainApp");
+      navigation.replace("Tabs");
     } else {
       Alert.alert("Login Failed", result.message);
     }

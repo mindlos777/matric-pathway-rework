@@ -218,7 +218,7 @@ export default function UniversitiesScreen({ navigation }) {
                 )
               : null;
 
-          // 🔥 CLOSING SOON
+          // CLOSING SOON
           const closingSoon =
             isOpen &&
             daysLeft !== null &&
