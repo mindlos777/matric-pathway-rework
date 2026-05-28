@@ -2,7 +2,6 @@ import React, { useMemo, useEffect, useState, useLayoutEffect } from "react";
 import {
   View,
   Text,
-  Image,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
@@ -23,7 +22,7 @@ export default function DashboardScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(3);
 
-  // ✅ HEADER ICONS (NOTIFICATIONS + SETTINGS)
+  //HEADER ICONS (NOTIFICATIONS + SETTINGS)
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
@@ -129,13 +128,12 @@ export default function DashboardScreen({ navigation }) {
       {/* HEADER */}
       <View style={styles.headerRow}>
         <Text style={styles.title}>
-          <Image style={{ width: 50, height: 50}} source={require('../theme/app_logo.png')} />
           Welcome, {displayName}
         </Text>
       </View>
 
       <Text style={styles.subtitle}>
-        .             Let’s build your future today
+        Let’s build your future today
       </Text>
 
       {/* APS CARD */}
@@ -272,7 +270,7 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: "#4F46E5",
     padding: 20,
-    borderRadius: 12,
+    borderRadius: 28,
     marginBottom: 15,
   },
 
@@ -291,7 +289,7 @@ const styles = StyleSheet.create({
   whiteButton: {
     backgroundColor: "#fff",
     padding: 10,
-    borderRadius: 8,
+    borderRadius: 28,
   },
 
   whiteButtonText: {
@@ -302,9 +300,9 @@ const styles = StyleSheet.create({
 
   progressCard: {
     padding: 15,
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: "#eee",
-    borderRadius: 10,
+    borderRadius: 28,
     marginBottom: 20,
   },
 
@@ -334,9 +332,9 @@ const styles = StyleSheet.create({
 
   uniCard: {
     padding: 12,
-    borderWidth: 1,
+    borderWidth: 3,
     borderColor: "#eee",
-    borderRadius: 10,
+    borderRadius: 28,
     marginBottom: 10,
   },
 
@@ -361,9 +359,9 @@ const styles = StyleSheet.create({
 
   actionCard: {
     padding: 15,
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: "#eee",
-    borderRadius: 10,
+    borderRadius: 28,
     marginBottom: 10,
   },
 

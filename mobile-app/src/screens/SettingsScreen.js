@@ -227,7 +227,7 @@ const styles = StyleSheet.create({
 
   card: {
     backgroundColor: "#fff",
-    borderRadius: 14,
+    borderRadius: 28,
     padding: 15,
     marginBottom: 15,
   },
@@ -256,7 +256,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#eee",
     paddingVertical: 10,
     paddingHorizontal: 14,
-    borderRadius: 10,
+    borderRadius: 28,
   },
 
   optionActive: {
@@ -276,7 +276,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
     backgroundColor: "#111",
     padding: 16,
-    borderRadius: 12,
+    borderRadius: 28,
   },
 
   logoutText: {

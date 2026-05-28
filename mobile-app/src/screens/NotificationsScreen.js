@@ -41,13 +41,13 @@ export default function NotificationsScreen({ navigation }) {
   return (
     <View style={styles.container}>
 
-      <Text style={styles.title}>
-        🔔 Deadline Tracker
+      {/*<Text style={styles.title}>
+        Deadline Tracker
       </Text>
 
       <Text style={styles.subtitle}>
         Track all institution and bursary deadlines
-      </Text>
+      </Text>*/}
 
       <FlatList
         data={deadlines}
@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
     padding: 15,
   },
 
-  title: {
+  /*title: {
     fontSize: 24,
     fontWeight: "bold",
     marginTop: 10,
@@ -132,13 +132,13 @@ const styles = StyleSheet.create({
     color: "#666",
     marginTop: 5,
     marginBottom: 20,
-  },
+  },*/
 
   card: {
     backgroundColor: "#fff",
     borderWidth: 1,
     borderColor: "#eee",
-    borderRadius: 14,
+    borderRadius: 28,
     padding: 15,
     marginBottom: 12,
   },

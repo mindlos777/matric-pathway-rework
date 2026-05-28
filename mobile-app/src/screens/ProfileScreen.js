@@ -181,6 +181,7 @@ export default function ProfileScreen() {
           editable={editMode}
           value={profile.firstName}
           placeholder="First Name"
+          placeholderTextColor="#9CA3AF"
           onChangeText={(v) => updateField("firstName", v)}
         />
 
@@ -189,6 +190,7 @@ export default function ProfileScreen() {
           editable={editMode}
           value={profile.lastName}
           placeholder="Last Name"
+          placeholderTextColor="#9CA3AF"
           onChangeText={(v) => updateField("lastName", v)}
         />
 
@@ -197,6 +199,7 @@ export default function ProfileScreen() {
           editable={editMode}
           value={profile.phone}
           placeholder="Phone"
+          placeholderTextColor="#9CA3AF"
           onChangeText={(v) => updateField("phone", v)}
         />
 
@@ -205,6 +208,7 @@ export default function ProfileScreen() {
           editable={editMode}
           value={profile.matricYear}
           placeholder="Matric Year"
+          placeholderTextColor="#9CA3AF"
           onChangeText={(v) => updateField("matricYear", v)}
         />
 
@@ -222,6 +226,7 @@ export default function ProfileScreen() {
               editable={editMode}
               value={s.name}
               placeholder="Subject"
+              placeholderTextColor="#9CA3AF"
               onChangeText={(v) => updateSubject(i, "name", v)}
             />
 
@@ -231,6 +236,7 @@ export default function ProfileScreen() {
               keyboardType="numeric"
               value={String(s.mark)}
               placeholder="%"
+              placeholderTextColor="#9CA3AF"
               onChangeText={(v) => updateSubject(i, "mark", v)}
             />
 
@@ -283,14 +289,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#ddd",
     padding: 12,
-    borderRadius: 10,
+    borderRadius: 28,
     marginBottom: 12,
   },
 
   apsBox: {
     backgroundColor: "#4F46E5",
     padding: 20,
-    borderRadius: 14,
+    borderRadius: 28,
     marginVertical: 15,
   },
 
@@ -312,7 +318,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#ddd",
     padding: 10,
-    borderRadius: 8,
+    borderRadius: 28,
   },
 
   mark: {
@@ -320,7 +326,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#ddd",
     padding: 10,
-    borderRadius: 8,
+    borderRadius: 28,
     textAlign: "center",
   },
 
@@ -339,21 +345,21 @@ const styles = StyleSheet.create({
   editBtn: {
     backgroundColor: "#4F46E5",
     padding: 14,
-    borderRadius: 10,
+    borderRadius: 28,
     marginTop: 15,
   },
 
   saveBtn: {
     backgroundColor: "#16A34A",
     padding: 14,
-    borderRadius: 10,
+    borderRadius: 28,
     marginTop: 15,
   },
 
   logout: {
     backgroundColor: "#111",
     padding: 14,
-    borderRadius: 10,
+    borderRadius: 28,
     marginTop: 15,
   },
 

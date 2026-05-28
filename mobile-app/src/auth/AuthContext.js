@@ -110,7 +110,7 @@ export const AuthProvider = ({ children }) => {
             firebaseUser.uid
           );
 
-          // 🔥 REALTIME PROFILE LISTENER
+          //REALTIME PROFILE LISTENER
           unsubscribeProfile = onSnapshot(
             ref,
             async (snap) => {

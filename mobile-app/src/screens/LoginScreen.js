@@ -31,7 +31,7 @@ export default function LoginScreen({ navigation }) {
     setLoading(false);
 
     if (result.success) {
-      navigation.replace("MainApp");
+      navigation.replace("Tabs");
     } else {
       Alert.alert("Login Failed", result.message);
     }
@@ -39,12 +39,13 @@ export default function LoginScreen({ navigation }) {
   
   return (
     <View style={styles.container}>
-      <Image style={{ width: 300, height: 150, marginLeft:15}} source={require('../theme/app_logo.png')} />
-      <Text style={styles.title}>EduMatch</Text>
+      <Image style={{ width: 250, height: 200, marginLeft:35}} source={require('../../assets/logo_v1.png')} />
+      <Text style={styles.title}></Text>
       <Text style={styles.subtitle}>Login to continue</Text>
 
       <TextInput
         placeholder="Email"
+        placeholderTextColor="#9CA3AF"
         value={email}
         onChangeText={setEmail}
         style={styles.input}
@@ -53,6 +54,7 @@ export default function LoginScreen({ navigation }) {
 
       <TextInput
         placeholder="Password"
+        placeholderTextColor="#9CA3AF"
         value={password}
         onChangeText={setPassword}
         style={styles.input}
@@ -102,13 +104,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#ddd",
     padding: 12,
-    borderRadius: 8,
+    borderRadius: 28,
     marginBottom: 10,
   },
   button: {
     backgroundColor: "#4F46E5",
     padding: 15,
-    borderRadius: 8,
+    borderRadius: 28,
     marginTop: 10,
   },
   buttonText: {

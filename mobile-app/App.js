@@ -9,7 +9,6 @@ import SignupScreen from "./src/screens/SignupScreen";
 import BottomTabs from "./src/navigation/BottomTabs";
 import WebViewScreen from "./src/screens/WebViewScreen";
 import TemplatesScreen from "./src/screens/TemplatesScreen";
-import TemplateViewerScreen from "./src/screens/TemplateViewerScreen";
 //import "./src/data/uploadUniversitie";
 
 const Stack = createNativeStackNavigator();
@@ -24,16 +23,15 @@ function AppNavigator() {
         {user ? (
           <>
             {/* MAIN APP */}
-            <Stack.Screen name="MainApp" component={BottomTabs} />
+            <Stack.Screen name="Tabs" component={BottomTabs} />
 
             {/* WEB VIEW SCREEN */}
             <Stack.Screen
               name="WebViewScreen"
               component={WebViewScreen}
-              options={{ headerShown: true, title: "Apply" }}
+              options={{ headerShown: false, title: "Apply" }}
             />
             <Stack.Screen name="Templates" component={TemplatesScreen} />
-            <Stack.Screen name="TemplateViewer" component={TemplateViewerScreen} />
           </>
         ) : (
           <>
