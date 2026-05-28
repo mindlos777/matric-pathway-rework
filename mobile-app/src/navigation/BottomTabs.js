@@ -44,7 +44,7 @@ function Tabs() {
           paddingTop: 6,
           borderTopWidth: 1,
           borderTopColor: "#eeeeee",
-          backgroundColor: "#ffffff6d",
+          backgroundColor: "#ffffff",
           borderRadius: 50,
           marginBottom: 5,
         },
@@ -196,10 +196,10 @@ export default function BottomTabs() {
         />
       </Stack.Navigator>
 
-      {/*FLOATING CHATBOT (GLOBAL) */}
+      {/*FLOATING CHATBOT (GLOBAL) 
       {!hideChatbotScreens.includes(
         routeName
-      ) && <FloatingChatbot />}
+      ) && <FloatingChatbot />}*/}
 
     </View>
     

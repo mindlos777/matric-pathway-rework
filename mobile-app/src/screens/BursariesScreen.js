@@ -79,7 +79,7 @@ export default function BursariesScreen({ navigation }) {
         style={{
           backgroundColor: "#111",
           padding: 10,
-          borderRadius: 8,
+          borderRadius: 28,
           marginBottom: 10,
         }}
       >
@@ -145,7 +145,9 @@ export default function BursariesScreen({ navigation }) {
                 marginTop: 10,
                 backgroundColor: "#4F46E5",
                 padding: 10,
-                borderRadius: 8,
+                borderWidth: 1,
+                borderColor: "#2165f988",
+                borderRadius: 28,
               }}
             >
               <Text style={{ color: "#fff", textAlign: "center" }}>

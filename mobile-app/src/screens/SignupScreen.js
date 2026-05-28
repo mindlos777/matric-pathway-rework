@@ -38,10 +38,11 @@ export default function SignupScreen({ navigation }) {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Create Account</Text>
-      <Text style={styles.subtitle}>Join EduMatch</Text>
+      <Text style={styles.subtitle}>Join Pathly</Text>
 
       <TextInput
         placeholder="Email"
+        placeholderTextColor="#9CA3AF"
         value={email}
         onChangeText={setEmail}
         style={styles.input}
@@ -50,6 +51,7 @@ export default function SignupScreen({ navigation }) {
 
       <TextInput
         placeholder="Password"
+        placeholderTextColor="#9CA3AF"
         value={password}
         onChangeText={setPassword}
         style={styles.input}
@@ -99,13 +101,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#ddd",
     padding: 12,
-    borderRadius: 8,
+    borderRadius: 28,
     marginBottom: 10,
   },
   button: {
     backgroundColor: "#10B981",
     padding: 15,
-    borderRadius: 8,
+    borderRadius: 28,
     marginTop: 10,
   },
   buttonText: {
