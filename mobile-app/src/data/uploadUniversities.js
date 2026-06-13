@@ -13,10 +13,7 @@ const uploadUniversities = async () => {
       await addDoc(
         collection(db, "universities_db"),
         {
-          ...uni,
-
-          opensAt: "2026-04-01",
-          closesAt: "2026-09-30",
+          ...uni
         }
       );
     }

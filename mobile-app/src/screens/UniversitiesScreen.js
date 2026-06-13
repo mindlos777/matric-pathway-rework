@@ -30,7 +30,6 @@ export default function UniversitiesScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
 
   const [selectedInstitution, setSelectedInstitution] = useState(null);
-  const [compareList, setCompareList] = useState([]);
 
   const [filters, setFilters] = useState({
     type: null,
@@ -63,17 +62,76 @@ export default function UniversitiesScreen({ navigation }) {
 
   // ================= OPEN APPLY PAGE =================
   const openApplyPage = (url) => {
-    if (!url) {
-      Alert.alert(
-        "Error",
-        "Application link not available"
-      );
+    if (!url) return;
+
+    const allowedProtocols = ["https://"];
+
+    const valid = allowedProtocols.some((p) =>
+      url.startsWith(p)
+    );
+
+    if (!valid) {
+      alert("Invalid application link");
       return;
     }
 
-    navigation.navigate("WebView", {
-      url,
-    });
+    navigation.navigate("WebViewScreen", { url });
+  };
+
+  // ----------------- STATUS TRACKER -----------------
+  const computeInstitutionStatus = (institution) => {
+    const today = new Date();
+
+    const openDate = institution.opensAt
+      ? new Date(institution.opensAt)
+      : null;
+
+    const closeDate = institution.closesAt
+      ? new Date(institution.closesAt)
+      : null;
+
+    if (
+      !closeDate ||
+      isNaN(closeDate.getTime())
+    ) {
+      return {
+        status: "Unknown",
+        isOpen: false,
+        closingSoon: false,
+        daysLeft: null,
+      };
+    }
+
+    const daysLeft = Math.ceil(
+      (closeDate - today) /
+        (1000 * 60 * 60 * 24)
+    );
+
+    const hasOpened =
+      !openDate || today >= openDate;
+
+    const isOpen =
+      hasOpened && daysLeft > 0;
+
+    const closingSoon =
+      isOpen &&
+      daysLeft <= 14 &&
+      daysLeft > 0;
+
+    let status = "Closed";
+
+    if (isOpen && closingSoon) {
+      status = "Closing Soon";
+    } else if (isOpen) {
+      status = "Open";
+    }
+
+    return {
+      status,
+      isOpen,
+      closingSoon,
+      daysLeft,
+    };
   };
 
   // ================= FILTER + SORT LOGIC =================
@@ -99,25 +157,10 @@ export default function UniversitiesScreen({ navigation }) {
     // STATUS FILTER
     if (filters.status) {
       list = list.filter((uni) => {
-        const today = new Date();
+        const { status } =
+          computeInstitutionStatus(uni);
 
-        const openDate = uni.opensAt
-          ? new Date(uni.opensAt)
-          : null;
-
-        const closeDate = uni.closesAt
-          ? new Date(uni.closesAt)
-          : null;
-
-        const isOpen =
-          openDate &&
-          closeDate &&
-          today >= openDate &&
-          today <= closeDate;
-
-        return filters.status === "Open"
-          ? isOpen
-          : !isOpen;
+        return status === filters.status;
       });
     }
 
@@ -148,8 +191,7 @@ export default function UniversitiesScreen({ navigation }) {
   const toggle = (key, value) => {
     setFilters((prev) => ({
       ...prev,
-      [key]:
-        prev[key] === value ? null : value,
+      [key]:prev[key] === value ? null : value,
     }));
   };
 
@@ -183,6 +225,28 @@ export default function UniversitiesScreen({ navigation }) {
         Your APS: {apsScore || 0}
       </Text>
 
+      <TouchableOpacity
+        onPress={() =>
+          navigation.navigate("CompareScreen")
+        }
+        style={{
+          backgroundColor: "#111827",
+          padding: 14,
+          borderRadius: 28,
+          marginBottom: 12,
+        }}
+      >
+        <Text
+          style={{
+            color: "#fff",
+            textAlign: "center",
+            fontWeight: "700",
+          }}
+        >
+          Compare Institutions
+        </Text>
+      </TouchableOpacity>
+
       {/* LIST */}
       <FlatList
         data={filtered}
@@ -197,29 +261,12 @@ export default function UniversitiesScreen({ navigation }) {
           </Text>
         }
         renderItem={({ item }) => {
-          const today = new Date();
-
-          const openDate = item.opensAt
-            ? new Date(item.opensAt)
-            : null;
-
-          const closeDate = item.closesAt
-            ? new Date(item.closesAt)
-            : null;
-
-          const isOpen =
-            openDate &&
-            closeDate &&
-            today >= openDate &&
-            today <= closeDate;
-
-          const daysLeft =
-            closeDate
-              ? Math.ceil(
-                  (closeDate - today) /
-                    (1000 * 60 * 60 * 24)
-                )
-              : 0;
+          const {
+            status,
+            isOpen,
+            closingSoon,
+            daysLeft,
+          } = computeInstitutionStatus(item);
 
           const qualified =
             Number(apsScore || 0) >=
@@ -269,7 +316,9 @@ export default function UniversitiesScreen({ navigation }) {
                       marginRight: 12,
                     }}
                   >
-                    {isOpen
+                    {status === "Closing Soon"
+                      ? "🟠 Closing Soon"
+                      : status === "Open"
                       ? "🟢 Open"
                       : "🔴 Closed"}
                   </Text>
@@ -502,15 +551,43 @@ export default function UniversitiesScreen({ navigation }) {
         onSwipeComplete={() =>
           setSelectedInstitution(null)
         }
-        style={{ margin: 0 }}
+        propagateSwipe
+        backdropOpacity={0.4}
+        animationIn="slideInUp"
+        animationOut="slideOutDown"
+        style={{
+          margin: 0,
+          justifyContent: "flex-end",
+          height:"80%"
+        }}
       >
         {selectedInstitution && (
           <ScrollView
             style={{
               flex: 1,
-              backgroundColor: "#F9FAFB",
-            }}
+              backgroundColor: "#f8fafc",
+              borderTopLeftRadius: 28,
+              borderTopRightRadius: 28,
+                      }}
           >
+            {/* Swipe handle */}
+            <View
+              style={{
+                alignItems: "center",
+                paddingTop: 10,
+                paddingBottom: 6,
+              }}
+            >
+              <View
+                style={{
+                  width: 50,
+                  height: 5,
+                  borderRadius: 999,
+                  backgroundColor: "#D1D5DB",
+                }}
+              />
+            </View>
+
             {/* HERO IMAGE */}
             <View>
               <Image
@@ -701,32 +778,6 @@ export default function UniversitiesScreen({ navigation }) {
                     • {course}
                   </Text>
                 ))}
-              </View>
-
-              {/* COMPARE */}
-              <View style={styles.detailsCard}>
-                <Text style={styles.detailsTitle}>
-                  Compare Institutions
-                </Text>
-
-                <TouchableOpacity
-                  style={styles.compareBtn}
-                  onPress={() =>
-                    setCompareList((prev) => [
-                      ...prev,
-                      selectedInstitution,
-                    ])
-                  }
-                >
-                  <Text
-                    style={{
-                      color: "#fff",
-                      fontWeight: "700",
-                    }}
-                  >
-                    Add To Compare
-                  </Text>
-                </TouchableOpacity>
               </View>
 
               {/* APPLY */}

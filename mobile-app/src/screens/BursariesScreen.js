@@ -22,55 +22,26 @@ export default function BursariesScreen({ navigation }) {
   const [filters, setFilters] = useState({
     type: null,
     status: null,
-    emailAutoApply: false,
+    field: null,
+    //emailAutoApply: false,
     fund: null,
   });
 
-  // ---------------- FILTER ----------------
-  const filtered = useMemo(() => {
-    return (bursaryData || []).filter((b) => {
-      const matchSearch =
-        b.name.toLowerCase().includes(search.toLowerCase());
-
-      const matchStatus =
-        !filters.status || b.status === filters.status;
-
-      const matchFund =
-        !filters.fund || b.funds?.includes(filters.fund);
-
-      const matchAuto =
-        !filters.emailAutoApply || b.autoApply === true;
-
-      const matchType =
-        !filters.type || b.type === filters.type;
-
-      return (
-        matchSearch &&
-        matchStatus &&
-        matchFund &&
-        matchAuto &&
-        matchType
-      );
-    });
-  }, [search, filters]);
-
-  const toggle = (key, value) => {
-    setFilters((prev) => ({
-      ...prev,
-      [key]: prev[key] === value ? null : value,
-    }));
-  };
-
-  // ---------------- OPEN WEBVIEW ----------------
-  const openApplyPage = (url) => {
-    if (!url) return;
-
-    navigation.navigate("WebViewScreen", { url });
-  };
-
-  const computeBursaryStatus = (bursary) => {
+  // ---------------- STATUS TRACKER --------
+    const computeBursaryStatus = (bursary) => {
     const today = new Date();
 
+    if (
+      bursary.closingDate === "Rolling" ||
+      bursary.closingDate === "Ongoing"
+    ) {
+      return {
+        status: "Open",
+        isOpen: true,
+        closingSoon: false,
+        daysLeft: null,
+      };
+    }
     const openDate = bursary.openingDate
       ? new Date(bursary.openingDate)
       : null;
@@ -92,8 +63,12 @@ export default function BursariesScreen({ navigation }) {
       };
     }
 
-    const daysLeft = Math.ceil(
-      (closeDate - today) / (1000 * 60 * 60 * 24)
+    const daysLeft = Math.max(
+      0,
+      Math.ceil(
+        (closeDate - today) /
+        (1000 * 60 * 60 * 24)
+      )
     );
 
     const hasOpened = !openDate || today >= openDate;
@@ -115,6 +90,87 @@ export default function BursariesScreen({ navigation }) {
   const modalStatus = selectedBursary
   ? computeBursaryStatus(selectedBursary)
   : null;
+
+  //----------------- Fields Filter ---------------
+  const availableFields = useMemo(() => {
+    const fields = new Set();
+
+    bursaryData.forEach((b) => {
+      (b.fieldsCovered || []).forEach((f) =>
+        fields.add(f)
+      );
+    });
+
+    return [...fields].sort();
+  }, []);
+
+  // ---------------- FILTER ----------------
+  const filtered = useMemo(() => {
+    return (bursaryData || []).filter((b) => {
+    if (!b.name) {
+      console.log("Missing name:", b);
+    }
+
+    const matchSearch =
+      String(b.name || "")
+        .toLowerCase()
+        .includes(search.toLowerCase());
+
+      const computedStatus =
+        computeBursaryStatus(b).status;
+
+      const matchStatus =
+        !filters.status ||
+        computedStatus === filters.status;
+
+      const matchFund =
+        !filters.fund || b.funds?.includes(filters.fund);
+
+      const matchField =
+        !filters.field ||
+        b.fieldsCovered?.includes(filters.field);
+
+      //const matchAuto =
+      //  !filters.emailAutoApply || b.autoApply === true;
+
+      const matchType =
+        !filters.type || b.type === filters.type;
+
+      return (
+        matchSearch &&
+        matchStatus &&
+        matchFund &&
+        matchField &&
+        //matchAuto &&
+        matchType
+      );
+    });
+  }, [search, filters]);
+
+  const toggle = (key, value) => {
+    setFilters((prev) => ({
+      ...prev,
+      [key]: prev[key] === value ? null : value,
+    }));
+  };
+
+  // ---------------- OPEN WEBVIEW ----------------
+  const openApplyPage = (url) => {
+    if (!url) return;
+
+    try {
+      const parsed = new URL(url);
+
+      if (parsed.protocol !== "https:") {
+        alert("Only HTTPS links are allowed");
+        return;
+      }
+
+      navigation.navigate("WebViewScreen", { url });
+    } catch {
+      alert("Invalid application link");
+    }
+  };
 
   return (
     <View style={{ flex: 1, padding: 15 }}>
@@ -142,7 +198,11 @@ export default function BursariesScreen({ navigation }) {
       {/* LIST */}
       <FlatList
         data={filtered}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item, index) =>
+          item.id?.toString() ||
+          item.name ||
+          index.toString()
+        }
         ListEmptyComponent={
           <Text style={{ textAlign: "center", marginTop: 20 }}>
             No bursaries found
@@ -295,13 +355,19 @@ export default function BursariesScreen({ navigation }) {
           backgroundColor: "rgba(0,0,0,0.4)",
         }}>
 
-          <View style={{
-            backgroundColor: "#fff",
-            padding: 20,
-            borderTopLeftRadius: 20,
-            borderTopRightRadius: 20,
-            maxHeight: "75%",
-          }}>
+          <ScrollView
+            style={{
+              backgroundColor: "#fff",
+              borderTopLeftRadius: 20,
+              borderTopRightRadius: 20,
+              maxHeight: "85%",
+            }}
+            contentContainerStyle={{
+              padding: 20,
+              paddingBottom: 40,
+            }}
+            showsVerticalScrollIndicator={false}
+          >
 
             {/* HEADER */}
             <View style={{
@@ -342,12 +408,60 @@ export default function BursariesScreen({ navigation }) {
               </TouchableOpacity>
             ))}
 
+            <Text
+              style={{
+                fontWeight: "bold",
+                marginTop: 15,
+              }}
+            >
+              Field of Study
+            </Text>
+
+            <View
+              style={{
+                flexDirection: "row",
+                flexWrap: "wrap",
+                marginTop: 8,
+              }}
+            >
+              {availableFields.slice(0, 20).map((field) => (
+                <TouchableOpacity
+                  key={field}
+                  onPress={() =>
+                    toggle("field", field)
+                  }
+                  style={{
+                    paddingHorizontal: 12,
+                    paddingVertical: 8,
+                    borderRadius: 20,
+                    marginRight: 8,
+                    marginBottom: 8,
+                    backgroundColor:
+                      filters.field === field
+                        ? "#4F46E5"
+                        : "#eee",
+                  }}
+                >
+                  <Text
+                    style={{
+                      color:
+                        filters.field === field
+                          ? "#fff"
+                          : "#000",
+                    }}
+                  >
+                    {field}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
             {/* STATUS */}
             <Text style={{ fontWeight: "bold", marginTop: 15 }}>
               Status
             </Text>
 
-            {["Open", "Closed"].map((s) => (
+            {["Open", "Closing Soon", "Closed"].map((s) => (
               <TouchableOpacity
                 key={s}
                 onPress={() => toggle("status", s)}
@@ -367,7 +481,7 @@ export default function BursariesScreen({ navigation }) {
               </TouchableOpacity>
             ))}
 
-            {/* AUTO APPLY */}
+            {/* AUTO APPLY 
             <TouchableOpacity
               onPress={() =>
                 setFilters((p) => ({
@@ -388,7 +502,7 @@ export default function BursariesScreen({ navigation }) {
               }}>
                 Email Auto Apply
               </Text>
-            </TouchableOpacity>
+            </TouchableOpacity>*/}
 
             {/* APPLY */}
             <TouchableOpacity
@@ -405,7 +519,7 @@ export default function BursariesScreen({ navigation }) {
               </Text>
             </TouchableOpacity>
 
-          </View>
+          </ScrollView>
         </View>
       </Modal>
 
@@ -416,18 +530,46 @@ export default function BursariesScreen({ navigation }) {
         onSwipeComplete={() =>
           setSelectedBursary(null)
         }
+        propagateSwipe
         backdropOpacity={0.4}
-        style={{ margin: 0 }}
-        
+        animationIn="slideInUp"
+        animationOut="slideOutDown"
+        style={{
+          margin: 0,
+          justifyContent: "flex-end",
+        }}
       >
+
         {selectedBursary && (
           <ScrollView
             style={{
               flex: 1,
               backgroundColor: "#F8FAFC",
+              borderTopLeftRadius: 28,
+              borderTopRightRadius: 28,
             }}
             showsVerticalScrollIndicator={false}
+            removeClippedSubviews={true}
+            scrollEventThrottle={16}
           >
+            {/* swipe handle */}
+            <View
+              style={{
+                alignItems: "center",
+                paddingTop: 10,
+                paddingBottom: 6,
+              }}
+            >
+              <View
+                style={{
+                  width: 50,
+                  height: 5,
+                  borderRadius: 999,
+                  backgroundColor: "#D1D5DB",
+                }}
+              />
+            </View>
+
             {/* HERO IMAGE */}
             <View>
               <Image
@@ -517,6 +659,18 @@ export default function BursariesScreen({ navigation }) {
                   }}
                 >
                   {selectedBursary.type}
+                </Text>
+                <Text
+                  numberOfLines={1}
+                  style={{
+                    color: "#E5E7EB",
+                    marginTop: 4,
+                    fontSize: 13,
+                  }}
+                >
+                  {(selectedBursary.fieldsCovered || [])
+                    .slice(0, 2)
+                    .join(", ")}
                 </Text>
               </View>
             </View>
@@ -662,6 +816,23 @@ export default function BursariesScreen({ navigation }) {
                     "No requirements available"}
                 </Text>
               )}
+              </View>
+
+              <View style={styles.detailsCard}>
+                <Text style={styles.detailsTitle}>
+                  Fields Covered
+                </Text>
+
+                {(selectedBursary.fieldsCovered || []).map(
+                  (field, index) => (
+                    <Text
+                      key={`field-${index}`}
+                      style={styles.bulletText}
+                    >
+                      • {field}
+                    </Text>
+                  )
+                )}
               </View>
 
               {/* CONTACT */}

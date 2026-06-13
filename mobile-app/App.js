@@ -9,7 +9,7 @@ import SignupScreen from "./src/screens/SignupScreen";
 import BottomTabs from "./src/navigation/BottomTabs";
 import WebViewScreen from "./src/screens/WebViewScreen";
 import TemplatesScreen from "./src/screens/TemplatesScreen";
-//import "./src/data/uploadUniversitie";
+//import "./src/data/uploadUniversities";
 
 const Stack = createNativeStackNavigator();
 
