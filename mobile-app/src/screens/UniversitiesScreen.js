@@ -11,7 +11,7 @@ import {
   ActivityIndicator,
   ScrollView,
 } from "react-native";
-
+import RNModal from "react-native-modal";
 import {
   collection,
   onSnapshot,
@@ -28,6 +28,8 @@ export default function UniversitiesScreen({ navigation }) {
   const [showFilters, setShowFilters] = useState(false);
   const [universities, setUniversities] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const [selectedInstitution, setSelectedInstitution] = useState(null);
 
   const [filters, setFilters] = useState({
     type: null,
@@ -60,17 +62,76 @@ export default function UniversitiesScreen({ navigation }) {
 
   // ================= OPEN APPLY PAGE =================
   const openApplyPage = (url) => {
-    if (!url) {
-      Alert.alert(
-        "Error",
-        "Application link not available"
-      );
+    if (!url) return;
+
+    const allowedProtocols = ["https://"];
+
+    const valid = allowedProtocols.some((p) =>
+      url.startsWith(p)
+    );
+
+    if (!valid) {
+      alert("Invalid application link");
       return;
     }
 
-    navigation.navigate("WebView", {
-      url,
-    });
+    navigation.navigate("WebViewScreen", { url });
+  };
+
+  // ----------------- STATUS TRACKER -----------------
+  const computeInstitutionStatus = (institution) => {
+    const today = new Date();
+
+    const openDate = institution.opensAt
+      ? new Date(institution.opensAt)
+      : null;
+
+    const closeDate = institution.closesAt
+      ? new Date(institution.closesAt)
+      : null;
+
+    if (
+      !closeDate ||
+      isNaN(closeDate.getTime())
+    ) {
+      return {
+        status: "Unknown",
+        isOpen: false,
+        closingSoon: false,
+        daysLeft: null,
+      };
+    }
+
+    const daysLeft = Math.ceil(
+      (closeDate - today) /
+        (1000 * 60 * 60 * 24)
+    );
+
+    const hasOpened =
+      !openDate || today >= openDate;
+
+    const isOpen =
+      hasOpened && daysLeft > 0;
+
+    const closingSoon =
+      isOpen &&
+      daysLeft <= 14 &&
+      daysLeft > 0;
+
+    let status = "Closed";
+
+    if (isOpen && closingSoon) {
+      status = "Closing Soon";
+    } else if (isOpen) {
+      status = "Open";
+    }
+
+    return {
+      status,
+      isOpen,
+      closingSoon,
+      daysLeft,
+    };
   };
 
   // ================= FILTER + SORT LOGIC =================
@@ -96,25 +157,10 @@ export default function UniversitiesScreen({ navigation }) {
     // STATUS FILTER
     if (filters.status) {
       list = list.filter((uni) => {
-        const today = new Date();
+        const { status } =
+          computeInstitutionStatus(uni);
 
-        const openDate = uni.opensAt
-          ? new Date(uni.opensAt)
-          : null;
-
-        const closeDate = uni.closesAt
-          ? new Date(uni.closesAt)
-          : null;
-
-        const isOpen =
-          openDate &&
-          closeDate &&
-          today >= openDate &&
-          today <= closeDate;
-
-        return filters.status === "Open"
-          ? isOpen
-          : !isOpen;
+        return status === filters.status;
       });
     }
 
@@ -145,8 +191,7 @@ export default function UniversitiesScreen({ navigation }) {
   const toggle = (key, value) => {
     setFilters((prev) => ({
       ...prev,
-      [key]:
-        prev[key] === value ? null : value,
+      [key]:prev[key] === value ? null : value,
     }));
   };
 
@@ -180,6 +225,28 @@ export default function UniversitiesScreen({ navigation }) {
         Your APS: {apsScore || 0}
       </Text>
 
+      <TouchableOpacity
+        onPress={() =>
+          navigation.navigate("CompareScreen")
+        }
+        style={{
+          backgroundColor: "#111827",
+          padding: 14,
+          borderRadius: 28,
+          marginBottom: 12,
+        }}
+      >
+        <Text
+          style={{
+            color: "#fff",
+            textAlign: "center",
+            fontWeight: "700",
+          }}
+        >
+          Compare Institutions
+        </Text>
+      </TouchableOpacity>
+
       {/* LIST */}
       <FlatList
         data={filtered}
@@ -194,131 +261,121 @@ export default function UniversitiesScreen({ navigation }) {
           </Text>
         }
         renderItem={({ item }) => {
-          const today = new Date();
+          const {
+            status,
+            isOpen,
+            closingSoon,
+            daysLeft,
+          } = computeInstitutionStatus(item);
 
-          const openDate = item.opensAt
-            ? new Date(item.opensAt)
-            : null;
-
-          const closeDate = item.closesAt
-            ? new Date(item.closesAt)
-            : null;
-
-          const isOpen =
-            openDate &&
-            closeDate &&
-            today >= openDate &&
-            today <= closeDate;
-
-          const daysLeft =
-            closeDate
-              ? Math.ceil(
-                  (closeDate - today) /
-                    (1000 * 60 * 60 * 24)
-                )
-              : null;
-
-          // CLOSING SOON
-          const closingSoon =
-            isOpen &&
-            daysLeft !== null &&
-            daysLeft <= 10 &&
-            daysLeft >= 1;
+          const qualified =
+            Number(apsScore || 0) >=
+            Number(item.minAPS || 0);
 
           return (
-            <View style={styles.card}>
-
-              {/* HEADER */}
-              <View style={styles.headerRow}>
-                <Image
-                  source={{
-                    uri:
-                      item.logo ||
-                      "https://upload.wikimedia.org/wikipedia/commons/a/ac/No_image_available.svg",
-                  }}
-                  style={styles.logo}
-                />
-
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.uniName}>
-                    {item.name}
-                  </Text>
-
-                  <Text style={styles.uniType}>
-                    {item.type}
-                  </Text>
-                </View>
-              </View>
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() =>
+                setSelectedInstitution(item)
+              }
+              style={styles.modernCard}
+            >
+              {/* LOGO */}
+              <Image
+                source={{
+                  uri:
+                    item.logo ||
+                    "https://upload.wikimedia.org/wikipedia/commons/a/ac/No_image_available.svg",
+                }}
+                style={styles.modernLogo}
+              />
 
               {/* INFO */}
-              <Text style={styles.infoText}>
-                Min APS:
-                <Text style={styles.bold}>
-                  {" "}
-                  {item.minAPS || "N/A"}
+              <View style={{ flex: 1 }}>
+                <Text style={styles.modernName}>
+                  {item.name}
                 </Text>
-              </Text>
 
-              {/* STATUS */}
-              <Text
-                style={[
-                  styles.status,
-                  {
-                    color: closingSoon
-                      ? "#EA580C"
-                      : isOpen
-                      ? "#16A34A"
-                      : "#DC2626",
-                  },
-                ]}
-              >
-                {closingSoon
-                  ? "🟠 Closing Soon"
-                  : isOpen
-                  ? "🟢 Applications Open"
-                  : "🔴 Applications Closed"}
-              </Text>
+                <Text style={styles.modernType}>
+                  {item.type}
+                </Text>
 
-              {/* DEADLINE */}
-              {isOpen &&
-                daysLeft !== null && (
+                <View
+                  style={{
+                    flexDirection: "row",
+                    flexWrap: "wrap",
+                    marginTop: 8,
+                  }}
+                >
                   <Text
-                    style={[
-                      styles.deadline,
-                      {
-                        color:
-                          daysLeft <= 10
-                            ? "#DC2626"
-                            : "#6B7280",
-                      },
-                    ]}
+                    style={{
+                      color: isOpen
+                        ? "#16A34A"
+                        : "#DC2626",
+                      fontWeight: "700",
+                      marginRight: 12,
+                    }}
                   >
-                    Closes in {daysLeft} days
+                    {status === "Closing Soon"
+                      ? "🟠 Closing Soon"
+                      : status === "Open"
+                      ? "🟢 Open"
+                      : "🔴 Closed"}
                   </Text>
-                )}
 
-              {/* APS QUALIFIED */}
-              {Number(apsScore || 0) >=
-                Number(item.minAPS || 0) && (
-                <View style={styles.qualifiedBadge}>
-                  <Text style={styles.badgeText}>
-                    APS Qualified
-                  </Text>
+                  {isOpen && (
+                    <Text
+                      style={{
+                        color: "#6B7280",
+                        fontWeight: "600",
+                      }}
+                    >
+                      Closes in {daysLeft} days
+                    </Text>
+                  )}
                 </View>
-              )}
+
+                {qualified && (
+                  <View
+                    style={{
+                      marginTop: 8,
+                      alignSelf: "flex-start",
+                      backgroundColor: "#DCFCE7",
+                      paddingHorizontal: 12,
+                      paddingVertical: 5,
+                      borderRadius: 20,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: "#166534",
+                        fontWeight: "700",
+                        fontSize: 12,
+                      }}
+                    >
+                      APS Qualified
+                    </Text>
+                  </View>
+                )}
+              </View>
 
               {/* APPLY */}
               <TouchableOpacity
                 onPress={() =>
                   openApplyPage(item.applyLink)
                 }
-                style={styles.applyBtn}
+                style={styles.smallApplyBtn}
               >
-                <Text style={styles.applyText}>
+                <Text
+                  style={{
+                    color: "#fff",
+                    fontWeight: "700",
+                  }}
+                >
                   Apply
                 </Text>
               </TouchableOpacity>
-            </View>
+            </TouchableOpacity>
           );
         }}
       />
@@ -488,6 +545,265 @@ export default function UniversitiesScreen({ navigation }) {
           </View>
         </View>
       </Modal>
+      <RNModal
+        isVisible={!!selectedInstitution}
+        swipeDirection="down"
+        onSwipeComplete={() =>
+          setSelectedInstitution(null)
+        }
+        propagateSwipe
+        backdropOpacity={0.4}
+        animationIn="slideInUp"
+        animationOut="slideOutDown"
+        style={{
+          margin: 0,
+          justifyContent: "flex-end",
+          height:"80%"
+        }}
+      >
+        {selectedInstitution && (
+          <ScrollView
+            style={{
+              flex: 1,
+              backgroundColor: "#f8fafc",
+              borderTopLeftRadius: 28,
+              borderTopRightRadius: 28,
+                      }}
+          >
+            {/* Swipe handle */}
+            <View
+              style={{
+                alignItems: "center",
+                paddingTop: 10,
+                paddingBottom: 6,
+              }}
+            >
+              <View
+                style={{
+                  width: 50,
+                  height: 5,
+                  borderRadius: 999,
+                  backgroundColor: "#D1D5DB",
+                }}
+              />
+            </View>
+
+            {/* HERO IMAGE */}
+            <View>
+              <Image
+                source={{
+                  uri:
+                    selectedInstitution.coverImage ||
+                    selectedInstitution.logo,
+                }}
+                style={{
+                  width: "100%",
+                  height: 280,
+                }}
+              />
+
+              {/* CLOSE */}
+              <TouchableOpacity
+                onPress={() =>
+                  setSelectedInstitution(null)
+                }
+                style={{
+                  position: "absolute",
+                  top: 55,
+                  left: 20,
+                  width: 44,
+                  height: 44,
+                  borderRadius: 50,
+                  backgroundColor:
+                    "rgba(0,0,0,0.45)",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <Text
+                  style={{
+                    color: "#fff",
+                    fontSize: 18,
+                  }}
+                >
+                  ✕
+                </Text>
+              </TouchableOpacity>
+
+              {/* FAVOURITE */}
+              <TouchableOpacity
+                style={{
+                  position: "absolute",
+                  top: 55,
+                  right: 20,
+                  width: 44,
+                  height: 44,
+                  borderRadius: 50,
+                  backgroundColor:
+                    "rgba(0,0,0,0.45)",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <Text
+                  style={{
+                    color: "#fff",
+                    fontSize: 18,
+                  }}
+                >
+                  ♡
+                </Text>
+              </TouchableOpacity>
+
+              {/* NAME */}
+              <View
+                style={{
+                  position: "absolute",
+                  bottom: 0,
+                  width: "100%",
+                  backgroundColor:
+                    "rgba(0,0,0,0.55)",
+                  padding: 20,
+                }}
+              >
+                <Text
+                  style={{
+                    color: "#fff",
+                    fontSize: 28,
+                    fontWeight: "800",
+                  }}
+                >
+                  {selectedInstitution.name}
+                </Text>
+
+                <Text
+                  style={{
+                    color: "#E5E7EB",
+                    marginTop: 4,
+                  }}
+                >
+                  {selectedInstitution.type}
+                </Text>
+              </View>
+            </View>
+
+            <View style={{ padding: 18 }}>
+
+              {/* QUICK INFO */}
+              <View
+                style={{
+                  flexDirection: "row",
+                  flexWrap: "wrap",
+                  gap: 10,
+                }}
+              >
+                <View style={styles.infoPill}>
+                  <Text style={styles.infoPillText}>
+                    APS {selectedInstitution.minAPS}
+                  </Text>
+                </View>
+
+                <View style={styles.infoPill}>
+                  <Text style={styles.infoPillText}>
+                    {selectedInstitution.type}
+                  </Text>
+                </View>
+              </View>
+
+              {/* ABOUT */}
+              <View style={styles.detailsCard}>
+                <Text style={styles.detailsTitle}>
+                  About Institution
+                </Text>
+
+                <Text style={styles.detailsText}>
+                  {
+                    selectedInstitution.description
+                  }
+                </Text>
+              </View>
+
+              {/* CONTACT */}
+              <View style={styles.detailsCard}>
+                <Text style={styles.detailsTitle}>
+                  Contact Information
+                </Text>
+
+                <Text style={styles.detailsText}>
+                  📍 {selectedInstitution.location}
+                </Text>
+
+                <Text style={styles.detailsText}>
+                  📞 {selectedInstitution.phone}
+                </Text>
+
+                <Text style={styles.detailsText}>
+                  ✉️ {selectedInstitution.email}
+                </Text>
+              </View>
+
+              {/* APPLICATION DATES */}
+              <View style={styles.detailsCard}>
+                <Text style={styles.detailsTitle}>
+                  Applications
+                </Text>
+
+                <Text style={styles.detailsText}>
+                  Opens:
+                  {" "}
+                  {selectedInstitution.opensAt}
+                </Text>
+
+                <Text style={styles.detailsText}>
+                  Closes:
+                  {" "}
+                  {selectedInstitution.closesAt}
+                </Text>
+              </View>
+
+              {/* COURSES */}
+              <View style={styles.detailsCard}>
+                <Text style={styles.detailsTitle}>
+                  Courses Offered
+                </Text>
+
+                {(
+                  selectedInstitution.courses ||
+                  []
+                ).map((course, index) => (
+                  <Text
+                    key={index}
+                    style={styles.detailsText}
+                  >
+                    • {course}
+                  </Text>
+                ))}
+              </View>
+
+              {/* APPLY */}
+              <TouchableOpacity
+                style={styles.bigApplyBtn}
+                onPress={() =>
+                  openApplyPage(
+                    selectedInstitution.applyLink
+                  )
+                }
+              >
+                <Text
+                  style={{
+                    color: "#fff",
+                    fontSize: 16,
+                    fontWeight: "700",
+                  }}
+                >
+                  Apply Now
+                </Text>
+              </TouchableOpacity>
+
+            </View>
+          </ScrollView>
+        )}
+      </RNModal>
     </View>
   );
 }
@@ -665,5 +981,87 @@ const styles = StyleSheet.create({
   applyFilterText: {
     color: "#fff",
     fontWeight: "600",
+  },
+
+  modernCard: {
+    backgroundColor: "#fff",
+    borderRadius: 30,
+    padding: 16,
+    marginBottom: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#ECECEC",
+  },
+
+  modernLogo: {
+    width: 70,
+    height: 70,
+    borderRadius: 20,
+    marginRight: 14,
+  },
+
+  modernName: {
+    fontSize: 17,
+    fontWeight: "800",
+    color: "#111827",
+  },
+
+  modernType: {
+    color: "#6B7280",
+    marginTop: 2,
+  },
+
+  smallApplyBtn: {
+    backgroundColor: "#4F46E5",
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 25,
+  },
+
+  infoPill: {
+    backgroundColor: "#EEF2FF",
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 30,
+  },
+
+  infoPillText: {
+    color: "#4338CA",
+    fontWeight: "700",
+  },
+
+  detailsCard: {
+    backgroundColor: "#fff",
+    padding: 18,
+    borderRadius: 22,
+    marginTop: 16,
+  },
+
+  detailsTitle: {
+    fontSize: 18,
+    fontWeight: "800",
+    marginBottom: 12,
+  },
+
+  detailsText: {
+    color: "#4B5563",
+    lineHeight: 24,
+  },
+
+  compareBtn: {
+    backgroundColor: "#111827",
+    padding: 15,
+    borderRadius: 30,
+    alignItems: "center",
+  },
+
+  bigApplyBtn: {
+    backgroundColor: "#4F46E5",
+    padding: 18,
+    borderRadius: 30,
+    marginTop: 20,
+    marginBottom: 40,
+    alignItems: "center",
   },
 });

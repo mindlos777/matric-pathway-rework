@@ -21,7 +21,7 @@ import CVTemplatesScreen from "../screens/CVTemplatesScreen";
 import CVEditorScreen from "../screens/CVEditorScreen";
 import EmailTemplatesScreen from "../screens/EmailTemplatesScreen";
 import EmailEditorScreen from "../screens/EmailEditorScreen";
-
+import CompareScreen from "../screens/CompareScreen";
 // Chatbot
 import FloatingChatbot from "../components/FloatingChatbot";
 
@@ -193,6 +193,11 @@ export default function BottomTabs() {
           options={{
             title: "Email Editor",
           }}
+        />
+
+        <Stack.Screen
+          name="CompareScreen"
+          component={CompareScreen}
         />
       </Stack.Navigator>
 
