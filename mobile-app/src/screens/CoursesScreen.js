@@ -1,4 +1,9 @@
-import React, { useState, useMemo } from "react";
+import React, {
+  useState,
+  useMemo,
+  useEffect,
+} from "react";
+
 import {
   View,
   Text,
@@ -8,15 +13,19 @@ import {
   Modal,
   ScrollView,
   StyleSheet,
+  ActivityIndicator,
 } from "react-native";
+
+import Slider from "@react-native-community/slider";
 
 import { Ionicons } from "@expo/vector-icons";
 
-import { courseData } from "../data/courseData";
-import { useAuth } from "../auth/AuthContext";
+import { getCourses } from "../services/courseService";
+import { useAuth } from "../../backend/auth/AuthContext";
 import SearchFilterBar from "../components/FilterBar";
-import { courseDescriptions } from "../data/courseDescriptions";
-import { universities } from "../data/universityData";
+
+import { courseDescriptions } from "../../backend/data/courseDescriptions";
+import { universities } from "../../backend/data/universityData";
 
 export default function CoursesScreen() {
   const { apsScore } = useAuth();
@@ -28,6 +37,23 @@ export default function CoursesScreen() {
   const [selectedCourse, setSelectedCourse] =
     useState(null);
 
+  const [courses, setCourses] = useState([]);
+  const [loadingCourses, setLoadingCourses] =
+    useState(true);
+
+  // ================= PRICE RANGE =================
+
+  const MIN_PRICE = 0;
+  const MAX_PRICE = 150000;
+
+  const [minPrice, setMinPrice] =
+    useState(MIN_PRICE);
+
+  const [maxPrice, setMaxPrice] =
+    useState(MAX_PRICE);
+
+  // ================= FILTERS =================
+
   const [filters, setFilters] = useState({
     field: null,
     demand: null,
@@ -36,6 +62,7 @@ export default function CoursesScreen() {
   });
 
   // ================= FILTER OPTIONS =================
+
   const typeOptions = [
     "Technology",
     "Business",
@@ -59,15 +86,22 @@ export default function CoursesScreen() {
   ];
 
   // ================= TOGGLE FILTER =================
-  const toggleFilter = (key, value) => {
+
+  const toggleFilter = (
+    key,
+    value
+  ) => {
     setFilters((prev) => ({
       ...prev,
       [key]:
-        prev[key] === value ? null : value,
+        prev[key] === value
+          ? null
+          : value,
     }));
   };
 
   // ================= APS FILTER =================
+
   const toggleAPSMode = () => {
     setFilters((prev) => ({
       ...prev,
@@ -75,36 +109,97 @@ export default function CoursesScreen() {
     }));
   };
 
-  // ================= FILTER LOGIC =================
-  const matched = useMemo(() => {
-    let list = [...courseData];
+  // ================= PRICE FORMATTER =================
 
-    // SEARCH
+  const formatPrice = (price) => {
+    const numericPrice =
+      Number(
+        String(price)
+          .replace(/R/g, "")
+          .replace(/,/g, "")
+          .replace(/\s/g, "")
+      );
+
+    if (
+      !numericPrice ||
+      isNaN(numericPrice)
+    ) {
+      return "Price unavailable";
+    }
+
+    return `R${numericPrice.toLocaleString(
+      "en-ZA"
+    )}`;
+  };
+
+  // ================= PRICE PARSER =================
+
+  const getCoursePrice = (course) => {
+    const price =
+      course?.price ??
+      course?.coursePrice ??
+      course?.fees ??
+      course?.tuition;
+
+    if (
+      price === null ||
+      price === undefined
+    ) {
+      return null;
+    }
+
+    const numericPrice =
+      Number(
+        String(price)
+          .replace(/R/g, "")
+          .replace(/,/g, "")
+          .replace(/\s/g, "")
+      );
+
+    return isNaN(numericPrice)
+      ? null
+      : numericPrice;
+  };
+
+  // ================= FILTER LOGIC =================
+
+  const matched = useMemo(() => {
+    let list = [...courses];
+
+    // ================= SEARCH =================
+
     if (search.trim()) {
       list = list.filter((course) =>
         course.name
           ?.toLowerCase()
-          .includes(search.toLowerCase())
+          .includes(
+            search.toLowerCase()
+          )
       );
     }
 
-    // FIELD
+    // ================= FIELD =================
+
     if (filters.field) {
       list = list.filter(
         (course) =>
-          course.field === filters.field
+          course.field ===
+          filters.field
       );
     }
 
-    // DEMAND
+    // ================= DEMAND =================
+
     if (filters.demand) {
       list = list.filter(
         (course) =>
-          course.demand === filters.demand
+          course.demand ===
+          filters.demand
       );
     }
 
-    // DURATION
+    // ================= DURATION =================
+
     if (filters.duration) {
       list = list.filter(
         (course) =>
@@ -113,46 +208,128 @@ export default function CoursesScreen() {
       );
     }
 
-    // APS FILTER
-    if (filters.apsMode === true) {
-      const userAPS = Number(apsScore);
+    // ================= PRICE =================
 
-      if (!userAPS || isNaN(userAPS)) {
+    list = list.filter((course) => {
+      const price =
+        getCoursePrice(course);
+
+      // If course has no price,
+      // don't remove it from the list.
+      if (price === null) {
+        return true;
+      }
+
+      return (
+        price >= minPrice &&
+        price <= maxPrice
+      );
+    });
+
+    // ================= APS =================
+
+    if (filters.apsMode === true) {
+      const userAPS =
+        Number(apsScore);
+
+      if (
+        !userAPS ||
+        isNaN(userAPS)
+      ) {
         return [];
       }
 
-      list = list.filter((course) => {
-        const minAPS = Number(
-          course.minAPS
-        );
+      list = list.filter(
+        (course) => {
+          const courseAPS =
+            Number(
+              course.minAPS
+            );
 
-        return userAPS >= minAPS;
-      });
+          return (
+            userAPS >= courseAPS
+          );
+        }
+      );
     }
 
-    // SMART SORT
+    // ================= SMART SORT =================
+
     if (apsScore) {
-      const userAPS = Number(apsScore);
+      const userAPS =
+        Number(apsScore);
 
       list.sort((a, b) => {
-        const diffA = Math.abs(
-          userAPS - Number(a.minAPS)
-        );
+        const diffA =
+          Math.abs(
+            userAPS -
+              Number(a.minAPS)
+          );
 
-        const diffB = Math.abs(
-          userAPS - Number(b.minAPS)
-        );
+        const diffB =
+          Math.abs(
+            userAPS -
+              Number(b.minAPS)
+          );
 
         return diffA - diffB;
       });
     }
 
     return list;
-  }, [search, filters, apsScore]);
+  }, [
+    search,
+    filters,
+    apsScore,
+    courses,
+    minPrice,
+    maxPrice,
+  ]);
+
+  // ================= LOAD COURSES =================
+
+  useEffect(() => {
+    loadCourses();
+  }, []);
+
+  const loadCourses = async () => {
+    try {
+      const data =
+        await getCourses();
+
+      setCourses(
+        Array.isArray(data)
+          ? data
+          : []
+      );
+    } catch (error) {
+      console.log(
+        "Course loading error:",
+        error
+      );
+    } finally {
+      setLoadingCourses(false);
+    }
+  };
+
+  // ================= LOADING =================
+
+  if (loadingCourses) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator
+          size="large"
+          color="#4F46E5"
+        />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
-      {/* SEARCH */}
+
+      {/* ================= SEARCH ================= */}
+
       <SearchFilterBar
         search={search}
         setSearch={setSearch}
@@ -162,64 +339,139 @@ export default function CoursesScreen() {
         placeholder="Search courses..."
       />
 
-      {/* APS */}
+      {/* ================= APS ================= */}
+
       <Text style={styles.apsText}>
-        Your APS: {String(apsScore || 0)}
+        Your APS:{" "}
+        {String(apsScore || 0)}
       </Text>
 
-      {/* ================= COURSES LIST ================= */}
+      {/* ================= COURSES ================= */}
+
       <FlatList
         data={matched}
-        keyExtractor={(item) => item.id}
-        showsVerticalScrollIndicator={false}
+        keyExtractor={(item) =>
+          String(item.id)
+        }
+        showsVerticalScrollIndicator={
+          false
+        }
         contentContainerStyle={{
           paddingBottom: 120,
         }}
         ListEmptyComponent={
-          <Text style={styles.emptyText}>
+          <Text
+            style={styles.emptyText}
+          >
             No courses found
           </Text>
         }
         renderItem={({ item }) => {
           const qualified =
             apsScore &&
-            apsScore >= item.minAPS;
+            Number(apsScore) >=
+              Number(item.minAPS);
+
+          const coursePrice =
+            getCoursePrice(item);
 
           return (
             <TouchableOpacity
               onPress={() =>
-                setSelectedCourse(item)
+                setSelectedCourse(
+                  item
+                )
               }
               activeOpacity={0.92}
               style={styles.courseCard}
             >
+
               {/* IMAGE */}
+
               <Image
-                source={{ uri: item.image }}
-                style={styles.courseImage}
+                source={{
+                  uri: item.image,
+                }}
+                style={
+                  styles.courseImage
+                }
               />
 
               {/* CONTENT */}
-              <View style={styles.courseContent}>
+
+              <View
+                style={
+                  styles.courseContent
+                }
+              >
+
                 {/* TITLE */}
-                <Text style={styles.courseTitle}>
+
+                <Text
+                  style={
+                    styles.courseTitle
+                  }
+                >
                   {item.name}
                 </Text>
 
                 {/* FIELD */}
-                <Text style={styles.courseField}>
+
+                <Text
+                  style={
+                    styles.courseField
+                  }
+                >
                   {item.field}
                 </Text>
 
+                {/* PRICE */}
+
+                <View
+                  style={
+                    styles.priceRow
+                  }
+                >
+                  <Ionicons
+                    name="cash-outline"
+                    size={18}
+                    color="#4F46E5"
+                  />
+
+                  <Text
+                    style={
+                      styles.priceText
+                    }
+                  >
+                    {coursePrice !==
+                    null
+                      ? formatPrice(
+                          coursePrice
+                        )
+                      : "Price unavailable"}
+                  </Text>
+                </View>
+
                 {/* INFO ROW */}
-                <View style={styles.infoRow}>
-                  <View style={styles.durationBadge}>
+
+                <View
+                  style={
+                    styles.infoRow
+                  }
+                >
+
+                  <View
+                    style={
+                      styles.durationBadge
+                    }
+                  >
                     <Text
                       style={
                         styles.durationText
                       }
                     >
-                      {item.duration} Years
+                      {item.duration}{" "}
+                      Years
                     </Text>
                   </View>
 
@@ -249,30 +501,42 @@ export default function CoursesScreen() {
                             ? "#92400E"
                             : "#374151",
 
-                        fontWeight: "700",
+                        fontWeight:
+                          "700",
                       }}
                     >
-                      {item.demand} Demand
+                      {item.demand}{" "}
+                      Demand
                     </Text>
                   </View>
+
                 </View>
 
                 {/* APS */}
-                <View style={styles.apsRow}>
+
+                <View
+                  style={
+                    styles.apsRow
+                  }
+                >
                   <Ionicons
                     name="school-outline"
                     size={18}
                     color="#4F46E5"
                   />
 
-                  <Text style={styles.apsLabel}>
-                    Minimum APS:
-                    {" "}
+                  <Text
+                    style={
+                      styles.apsLabel
+                    }
+                  >
+                    Minimum APS:{" "}
                     {item.minAPS}
                   </Text>
                 </View>
 
                 {/* QUALIFIED */}
+
                 {apsScore ? (
                   <View
                     style={[
@@ -287,11 +551,13 @@ export default function CoursesScreen() {
                   >
                     <Text
                       style={{
-                        color: qualified
-                          ? "#166534"
-                          : "#991B1B",
+                        color:
+                          qualified
+                            ? "#166534"
+                            : "#991B1B",
 
-                        fontWeight: "700",
+                        fontWeight:
+                          "700",
                       }}
                     >
                       {qualified
@@ -302,7 +568,12 @@ export default function CoursesScreen() {
                 ) : null}
 
                 {/* READ MORE */}
-                <View style={styles.readMore}>
+
+                <View
+                  style={
+                    styles.readMore
+                  }
+                >
                   <Text
                     style={
                       styles.readMoreText
@@ -320,23 +591,48 @@ export default function CoursesScreen() {
                     }}
                   />
                 </View>
+
               </View>
             </TouchableOpacity>
           );
         }}
       />
 
-      {/* ================= FILTER MODAL ================= */}
+      {/* ================================================= */}
+      {/* FILTER MODAL */}
+      {/* ================================================= */}
+
       <Modal
         visible={showFilters}
         animationType="slide"
         transparent
       >
-        <View style={styles.filterOverlay}>
-          <View style={styles.filterContainer}>
+
+        <View
+          style={
+            styles.filterOverlay
+          }
+        >
+
+          <View
+            style={
+              styles.filterContainer
+            }
+          >
+
             {/* HEADER */}
-            <View style={styles.filterHeader}>
-              <Text style={styles.filterTitle}>
+
+            <View
+              style={
+                styles.filterHeader
+              }
+            >
+
+              <Text
+                style={
+                  styles.filterTitle
+                }
+              >
                 Filters
               </Text>
 
@@ -353,21 +649,32 @@ export default function CoursesScreen() {
                   ✕
                 </Text>
               </TouchableOpacity>
+
             </View>
 
             <ScrollView
               showsVerticalScrollIndicator={
                 false
               }
-              style={{ marginTop: 15 }}
+              style={{
+                marginTop: 15,
+              }}
             >
-              {/* APS MODE */}
-              <Text style={styles.filterLabel}>
+
+              {/* ================= APS ================= */}
+
+              <Text
+                style={
+                  styles.filterLabel
+                }
+              >
                 Smart Recommendations
               </Text>
 
               <TouchableOpacity
-                onPress={toggleAPSMode}
+                onPress={
+                  toggleAPSMode
+                }
                 style={[
                   styles.filterOption,
                   {
@@ -378,6 +685,7 @@ export default function CoursesScreen() {
                   },
                 ]}
               >
+
                 <Text
                   style={{
                     color:
@@ -385,207 +693,440 @@ export default function CoursesScreen() {
                         ? "#fff"
                         : "#000",
 
-                    fontWeight: "600",
+                    fontWeight:
+                      "600",
                   }}
                 >
                   Based on my APS
                 </Text>
+
               </TouchableOpacity>
 
-              {/* TYPE */}
-              <Text style={styles.filterLabel}>
+              {/* ================= PRICE ================= */}
+
+              <Text
+                style={
+                  styles.filterLabel
+                }
+              >
+                Course Price
+              </Text>
+
+              <View
+                style={
+                  styles.priceRangeCard
+                }
+              >
+
+                <View
+                  style={
+                    styles.priceRangeHeader
+                  }
+                >
+
+                  <Text
+                    style={
+                      styles.priceRangeLabel
+                    }
+                  >
+                    Minimum
+                  </Text>
+
+                  <Text
+                    style={
+                      styles.priceRangeValue
+                    }
+                  >
+                    {formatPrice(
+                      minPrice
+                    )}
+                  </Text>
+
+                </View>
+
+                <Slider
+                  minimumValue={
+                    MIN_PRICE
+                  }
+                  maximumValue={
+                    MAX_PRICE
+                  }
+                  step={1000}
+                  value={minPrice}
+                  onValueChange={(
+                    value
+                  ) => {
+
+                    const rounded =
+                      Math.round(
+                        value / 1000
+                      ) * 1000;
+
+                    if (
+                      rounded <
+                      maxPrice
+                    ) {
+                      setMinPrice(
+                        rounded
+                      );
+                    }
+
+                  }}
+                  minimumTrackTintColor="#4F46E5"
+                  maximumTrackTintColor="#E5E7EB"
+                  thumbTintColor="#4F46E5"
+                />
+
+                <View
+                  style={
+                    styles.priceRangeHeader
+                  }
+                >
+
+                  <Text
+                    style={
+                      styles.priceRangeLabel
+                    }
+                  >
+                    Maximum
+                  </Text>
+
+                  <Text
+                    style={
+                      styles.priceRangeValue
+                    }
+                  >
+                    {formatPrice(
+                      maxPrice
+                    )}
+                  </Text>
+
+                </View>
+
+                <Slider
+                  minimumValue={
+                    MIN_PRICE
+                  }
+                  maximumValue={
+                    MAX_PRICE
+                  }
+                  step={1000}
+                  value={maxPrice}
+                  onValueChange={(
+                    value
+                  ) => {
+
+                    const rounded =
+                      Math.round(
+                        value / 1000
+                      ) * 1000;
+
+                    if (
+                      rounded >
+                      minPrice
+                    ) {
+                      setMaxPrice(
+                        rounded
+                      );
+                    }
+
+                  }}
+                  minimumTrackTintColor="#4F46E5"
+                  maximumTrackTintColor="#E5E7EB"
+                  thumbTintColor="#4F46E5"
+                />
+
+                <Text
+                  style={
+                    styles.priceHelp
+                  }
+                >
+                  Ranges from{" "}
+                  {formatPrice(
+                    minPrice
+                  )}{" "}
+                  to{" "}
+                  {formatPrice(
+                    maxPrice
+                  )}
+                </Text>
+
+              </View>
+
+              {/* ================= FIELD ================= */}
+
+              <Text
+                style={
+                  styles.filterLabel
+                }
+              >
                 Type
               </Text>
 
-              {typeOptions.map((t) => (
-                <TouchableOpacity
-                  key={t}
-                  onPress={() =>
-                    toggleFilter(
-                      "field",
-                      t
-                    )
-                  }
-                  style={[
-                    styles.filterOption,
-                    {
-                      backgroundColor:
-                        filters.field === t
-                          ? "#4F46E5"
-                          : "#eee",
-                    },
-                  ]}
-                >
-                  <Text
-                    style={{
-                      color:
-                        filters.field ===
+              {typeOptions.map(
+                (t) => (
+                  <TouchableOpacity
+                    key={t}
+                    onPress={() =>
+                      toggleFilter(
+                        "field",
                         t
-                          ? "#fff"
-                          : "#000",
-                    }}
+                      )
+                    }
+                    style={[
+                      styles.filterOption,
+                      {
+                        backgroundColor:
+                          filters.field ===
+                          t
+                            ? "#4F46E5"
+                            : "#eee",
+                      },
+                    ]}
                   >
-                    {t}
-                  </Text>
-                </TouchableOpacity>
-              ))}
 
-              {/* DEMAND */}
-              <Text style={styles.filterLabel}>
+                    <Text
+                      style={{
+                        color:
+                          filters.field ===
+                          t
+                            ? "#fff"
+                            : "#000",
+                      }}
+                    >
+                      {t}
+                    </Text>
+
+                  </TouchableOpacity>
+                )
+              )}
+
+              {/* ================= DEMAND ================= */}
+
+              <Text
+                style={
+                  styles.filterLabel
+                }
+              >
                 Demand
               </Text>
 
-              {demandOptions.map((d) => (
-                <TouchableOpacity
-                  key={d}
-                  onPress={() =>
-                    toggleFilter(
-                      "demand",
-                      d
-                    )
-                  }
-                  style={[
-                    styles.filterOption,
-                    {
-                      backgroundColor:
-                        filters.demand ===
+              {demandOptions.map(
+                (d) => (
+                  <TouchableOpacity
+                    key={d}
+                    onPress={() =>
+                      toggleFilter(
+                        "demand",
                         d
-                          ? "#4F46E5"
-                          : "#eee",
-                    },
-                  ]}
-                >
-                  <Text
-                    style={{
-                      color:
-                        filters.demand ===
-                        d
-                          ? "#fff"
-                          : "#000",
-                    }}
+                      )
+                    }
+                    style={[
+                      styles.filterOption,
+                      {
+                        backgroundColor:
+                          filters.demand ===
+                          d
+                            ? "#4F46E5"
+                            : "#eee",
+                      },
+                    ]}
                   >
-                    {d}
-                  </Text>
-                </TouchableOpacity>
-              ))}
 
-              {/* DURATION */}
-              <Text style={styles.filterLabel}>
+                    <Text
+                      style={{
+                        color:
+                          filters.demand ===
+                          d
+                            ? "#fff"
+                            : "#000",
+                      }}
+                    >
+                      {d}
+                    </Text>
+
+                  </TouchableOpacity>
+                )
+              )}
+
+              {/* ================= DURATION ================= */}
+
+              <Text
+                style={
+                  styles.filterLabel
+                }
+              >
                 Duration
               </Text>
 
-              {durationOptions.map((d) => (
-                <TouchableOpacity
-                  key={d}
-                  onPress={() =>
-                    toggleFilter(
-                      "duration",
-                      d
-                    )
-                  }
-                  style={[
-                    styles.filterOption,
-                    {
-                      backgroundColor:
-                        filters.duration ===
+              {durationOptions.map(
+                (d) => (
+                  <TouchableOpacity
+                    key={d}
+                    onPress={() =>
+                      toggleFilter(
+                        "duration",
                         d
-                          ? "#4F46E5"
-                          : "#eee",
-                    },
-                  ]}
-                >
-                  <Text
-                    style={{
-                      color:
-                        filters.duration ===
-                        d
-                          ? "#fff"
-                          : "#000",
-                    }}
+                      )
+                    }
+                    style={[
+                      styles.filterOption,
+                      {
+                        backgroundColor:
+                          filters.duration ===
+                          d
+                            ? "#4F46E5"
+                            : "#eee",
+                      },
+                    ]}
                   >
-                    {d} Years
-                  </Text>
-                </TouchableOpacity>
-              ))}
+
+                    <Text
+                      style={{
+                        color:
+                          filters.duration ===
+                          d
+                            ? "#fff"
+                            : "#000",
+                      }}
+                    >
+                      {d} Years
+                    </Text>
+
+                  </TouchableOpacity>
+                )
+              )}
+
             </ScrollView>
 
             {/* APPLY */}
+
             <TouchableOpacity
               onPress={() =>
                 setShowFilters(false)
               }
-              style={styles.applyBtn}
+              style={
+                styles.applyBtn
+              }
             >
-              <Text style={styles.applyText}>
+
+              <Text
+                style={
+                  styles.applyText
+                }
+              >
                 Apply Filters
               </Text>
+
             </TouchableOpacity>
+
           </View>
         </View>
+
       </Modal>
 
-      {/* ================= COURSE DETAILS ================= */}
+      {/* ================================================= */}
+      {/* COURSE DETAILS */}
+      {/* ================================================= */}
+
       <Modal
         visible={!!selectedCourse}
         animationType="slide"
       >
+
         {selectedCourse && (
           <ScrollView
-            style={styles.detailsContainer}
+            style={
+              styles.detailsContainer
+            }
             showsVerticalScrollIndicator={
               false
             }
           >
-            {/* HERO IMAGE */}
+
+            {/* HERO */}
+
             <View>
+
               <Image
                 source={{
-                  uri: selectedCourse.image,
+                  uri:
+                    selectedCourse.image,
                 }}
-                style={styles.heroImage}
+                style={
+                  styles.heroImage
+                }
               />
 
-              {/* CLOSE */}
               <TouchableOpacity
                 onPress={() =>
-                  setSelectedCourse(null)
+                  setSelectedCourse(
+                    null
+                  )
                 }
-                style={styles.closeBtn}
+                style={
+                  styles.closeBtn
+                }
               >
                 <Text
                   style={{
                     color: "#fff",
                     fontSize: 18,
-                    fontWeight: "bold",
+                    fontWeight:
+                      "bold",
                   }}
                 >
                   ✕
                 </Text>
               </TouchableOpacity>
 
-              {/* COURSE NAME */}
               <View
-                style={styles.heroOverlay}
+                style={
+                  styles.heroOverlay
+                }
               >
-                <Text style={styles.heroTitle}>
+
+                <Text
+                  style={
+                    styles.heroTitle
+                  }
+                >
                   {selectedCourse.name}
                 </Text>
 
                 <Text
-                  style={styles.heroField}
+                  style={
+                    styles.heroField
+                  }
                 >
                   {selectedCourse.field}
                 </Text>
+
               </View>
+
             </View>
 
-            {/* CONTENT */}
-            <View style={styles.detailsContent}>
+            {/* DETAILS */}
+
+            <View
+              style={
+                styles.detailsContent
+              }
+            >
+
               {/* QUICK INFO */}
+
               <View
-                style={styles.quickInfoRow}
+                style={
+                  styles.quickInfoRow
+                }
               >
-                <View style={styles.infoPill}>
+
+                <View
+                  style={
+                    styles.infoPill
+                  }
+                >
                   <Text
                     style={
                       styles.infoPillText
@@ -598,7 +1139,11 @@ export default function CoursesScreen() {
                   </Text>
                 </View>
 
-                <View style={styles.infoPill}>
+                <View
+                  style={
+                    styles.infoPill
+                  }
+                >
                   <Text
                     style={
                       styles.infoPillText
@@ -611,7 +1156,11 @@ export default function CoursesScreen() {
                   </Text>
                 </View>
 
-                <View style={styles.infoPill}>
+                <View
+                  style={
+                    styles.infoPill
+                  }
+                >
                   <Text
                     style={
                       styles.infoPillText
@@ -636,9 +1185,12 @@ export default function CoursesScreen() {
                     },
                   ]}
                 >
+
                   <Text
                     style={{
-                      fontWeight: "700",
+                      fontWeight:
+                        "700",
+
                       color:
                         selectedCourse.demand ===
                         "High"
@@ -651,11 +1203,65 @@ export default function CoursesScreen() {
                     }{" "}
                     Demand
                   </Text>
+
                 </View>
+
+              </View>
+
+              {/* PRICE */}
+
+              <View
+                style={
+                  styles.detailsCard
+                }
+              >
+
+                <Text
+                  style={
+                    styles.detailsTitle
+                  }
+                >
+                  Course Price
+                </Text>
+
+                <Text
+                  style={
+                    styles.coursePriceDetails
+                  }
+                >
+                  {getCoursePrice(
+                    selectedCourse
+                  ) !== null
+                    ? formatPrice(
+                        getCoursePrice(
+                          selectedCourse
+                        )
+                      )
+                    : "Price unavailable"}
+                </Text>
+
+                <Text
+                  style={
+                    styles.priceDisclaimer
+                  }
+                >
+                  Course fees may vary by
+                  institution and academic
+                  year. Check the institution's
+                  official website for the
+                  latest fees.
+                </Text>
+
               </View>
 
               {/* ABOUT */}
-              <View style={styles.detailsCard}>
+
+              <View
+                style={
+                  styles.detailsCard
+                }
+              >
+
                 <Text
                   style={
                     styles.detailsTitle
@@ -669,79 +1275,128 @@ export default function CoursesScreen() {
                     styles.detailsText
                   }
                 >
-                  {courseDescriptions[
-                    selectedCourse.id
-                  ]?.overview ||
-                    "No description available yet."}
+                  {
+                    courseDescriptions[
+                      selectedCourse.id
+                    ]?.overview ||
+                    "No description available yet."
+                  }
                 </Text>
+
               </View>
 
               {/* INSTITUTIONS */}
-              <View style={styles.detailsCard}>
-                <Text style={styles.detailsTitle}>
-                  Institutions Offering This Course
+
+              <View
+                style={
+                  styles.detailsCard
+                }
+              >
+
+                <Text
+                  style={
+                    styles.detailsTitle
+                  }
+                >
+                  Institutions Offering
+                  This Course
                 </Text>
 
-                {(selectedCourse.offeredAt || []).map(
-                  (uni, index) => {
+                {(
+                  selectedCourse.offeredAt ||
+                  []
+                ).map(
+                  (
+                    uni,
+                    index
+                  ) => {
+
                     const institution =
                       universities?.find(
-                        (u) => u.id === uni.universityId
+                        (u) =>
+                          u.id ===
+                          uni.universityId
                       );
 
-                    if (!institution) return null;
-                    console.log("COURSE UNI:", uni.universityId);
-                    console.log("FOUND:", institution);
+                    if (
+                      !institution
+                    )
+                      return null;
 
                     return (
                       <View
                         key={index}
                         style={{
-                          flexDirection: "row",
-                          alignItems: "center",
-                          backgroundColor: "#F9FAFB",
+                          flexDirection:
+                            "row",
+
+                          alignItems:
+                            "center",
+
+                          backgroundColor:
+                            "#F9FAFB",
+
                           padding: 14,
-                          borderRadius: 16,
+
+                          borderRadius:
+                            16,
+
                           marginTop: 12,
                         }}
                       >
-                        {/* LOGO */}
+
                         <Image
                           source={{
-                            uri: institution.logo,
+                            uri:
+                              institution.logo,
                           }}
                           style={{
                             width: 55,
                             height: 55,
-                            borderRadius: 12,
-                            marginRight: 14,
-                            backgroundColor: "#fff",
+                            borderRadius:
+                              12,
+                            marginRight:
+                              14,
+                            backgroundColor:
+                              "#fff",
                           }}
                           resizeMode="contain"
                         />
 
-                        {/* INFO */}
-                        <View style={{ flex: 1 }}>
+                        <View
+                          style={{
+                            flex: 1,
+                          }}
+                        >
+
                           <Text
                             style={{
                               fontSize: 16,
-                              fontWeight: "700",
-                              color: "#111827",
+                              fontWeight:
+                                "700",
+                              color:
+                                "#111827",
                             }}
                           >
-                            {institution.name}
+                            {
+                              institution.name
+                            }
                           </Text>
 
                           <Text
                             style={{
                               marginTop: 4,
-                              color: "#6B7280",
+                              color:
+                                "#6B7280",
                             }}
                           >
                             APS Requirement:
                             {" "}
-                            {institution.minAPS}
+                            {
+                              institution.minAPS
+                            }
                           </Text>
+
                         </View>
 
                         <Ionicons
@@ -749,14 +1404,22 @@ export default function CoursesScreen() {
                           size={22}
                           color="#4F46E5"
                         />
+
                       </View>
                     );
                   }
                 )}
+
               </View>
 
               {/* AI SAFETY */}
-              <View style={styles.detailsCard}>
+
+              <View
+                style={
+                  styles.detailsCard
+                }
+              >
+
                 <Text
                   style={
                     styles.detailsTitle
@@ -770,15 +1433,24 @@ export default function CoursesScreen() {
                     styles.detailsText
                   }
                 >
-                  {courseDescriptions[
-                    selectedCourse.id
-                  ]?.aiSafety ||
-                    "Information coming soon."}
+                  {
+                    courseDescriptions[
+                      selectedCourse.id
+                    ]?.aiSafety ||
+                    "Information coming soon."
+                  }
                 </Text>
+
               </View>
 
               {/* CAREERS */}
-              <View style={styles.detailsCard}>
+
+              <View
+                style={
+                  styles.detailsCard
+                }
+              >
+
                 <Text
                   style={
                     styles.detailsTitle
@@ -790,7 +1462,10 @@ export default function CoursesScreen() {
                 {courseDescriptions[
                   selectedCourse.id
                 ]?.careers?.map(
-                  (career, index) => (
+                  (
+                    career,
+                    index
+                  ) => (
                     <Text
                       key={index}
                       style={
@@ -801,10 +1476,17 @@ export default function CoursesScreen() {
                     </Text>
                   )
                 )}
+
               </View>
 
               {/* WHAT YOU LEARN */}
-              <View style={styles.detailsCard}>
+
+              <View
+                style={
+                  styles.detailsCard
+                }
+              >
+
                 <Text
                   style={
                     styles.detailsTitle
@@ -816,7 +1498,10 @@ export default function CoursesScreen() {
                 {courseDescriptions[
                   selectedCourse.id
                 ]?.procedures?.map(
-                  (item, index) => (
+                  (
+                    item,
+                    index
+                  ) => (
                     <Text
                       key={index}
                       style={
@@ -827,10 +1512,17 @@ export default function CoursesScreen() {
                     </Text>
                   )
                 )}
+
               </View>
 
               {/* SUBJECT REQUIREMENTS */}
-              <View style={styles.detailsCard}>
+
+              <View
+                style={
+                  styles.detailsCard
+                }
+              >
+
                 <Text
                   style={
                     styles.detailsTitle
@@ -842,34 +1534,45 @@ export default function CoursesScreen() {
                 {(
                   selectedCourse.subjects ||
                   []
-                ).map((s, i) => (
-                  <View
-                    key={i}
-                    style={
-                      styles.subjectRow
-                    }
-                  >
-                    <Text
+                ).map(
+                  (s, i) => (
+                    <View
+                      key={i}
                       style={
-                        styles.detailsText
+                        styles.subjectRow
                       }
                     >
-                      {s.name}
-                    </Text>
 
-                    <Text
-                      style={
-                        styles.subjectMark
-                      }
-                    >
-                      {s.min}%
-                    </Text>
-                  </View>
-                ))}
+                      <Text
+                        style={
+                          styles.detailsText
+                        }
+                      >
+                        {s.name}
+                      </Text>
+
+                      <Text
+                        style={
+                          styles.subjectMark
+                        }
+                      >
+                        {s.min}%
+                      </Text>
+
+                    </View>
+                  )
+                )}
+
               </View>
 
               {/* SALARY */}
-              <View style={styles.detailsCard}>
+
+              <View
+                style={
+                  styles.detailsCard
+                }
+              >
+
                 <Text
                   style={
                     styles.detailsTitle
@@ -883,15 +1586,24 @@ export default function CoursesScreen() {
                     styles.detailsText
                   }
                 >
-                  {courseDescriptions[
-                    selectedCourse.id
-                  ]?.salary ||
-                    "Information coming soon."}
+                  {
+                    courseDescriptions[
+                      selectedCourse.id
+                    ]?.salary ||
+                    "Information coming soon."
+                  }
                 </Text>
+
               </View>
 
               {/* PERSONALITY */}
-              <View style={styles.detailsCard}>
+
+              <View
+                style={
+                  styles.detailsCard
+                }
+              >
+
                 <Text
                   style={
                     styles.detailsTitle
@@ -905,15 +1617,24 @@ export default function CoursesScreen() {
                     styles.detailsText
                   }
                 >
-                  {courseDescriptions[
-                    selectedCourse.id
-                  ]?.personalityFit ||
-                    "Information coming soon."}
+                  {
+                    courseDescriptions[
+                      selectedCourse.id
+                    ]?.personalityFit ||
+                    "Information coming soon."
+                  }
                 </Text>
+
               </View>
 
               {/* FUTURE DEMAND */}
-              <View style={styles.detailsCard}>
+
+              <View
+                style={
+                  styles.detailsCard
+                }
+              >
+
                 <Text
                   style={
                     styles.detailsTitle
@@ -927,284 +1648,369 @@ export default function CoursesScreen() {
                     styles.detailsText
                   }
                 >
-                  {courseDescriptions[
-                    selectedCourse.id
-                  ]?.futureDemand ||
-                    "Information coming soon."}
+                  {
+                    courseDescriptions[
+                      selectedCourse.id
+                    ]?.futureDemand ||
+                    "Information coming soon."
+                  }
                 </Text>
+
               </View>
 
               <View
-                style={{ height: 40 }}
+                style={{
+                  height: 40,
+                }}
               />
+
             </View>
+
           </ScrollView>
         )}
+
       </Modal>
+
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 15,
-    backgroundColor: "#F9FAFB",
-  },
+// ======================================================
+// STYLES
+// ======================================================
 
-  apsText: {
-    marginBottom: 14,
-    color: "#6B7280",
-    fontWeight: "500",
-  },
+const styles =
+  StyleSheet.create({
 
-  emptyText: {
-    textAlign: "center",
-    marginTop: 20,
-    color: "#666",
-  },
+    container: {
+      flex: 1,
+      padding: 15,
+      backgroundColor:
+        "#F9FAFB",
+    },
 
-  // ================= COURSE CARD =================
-  courseCard: {
-    backgroundColor: "#fff",
-    borderRadius: 22,
-    overflow: "hidden",
-    marginBottom: 18,
-    borderWidth: 1,
-    borderColor: "#ECECEC",
-  },
+    apsText: {
+      marginBottom: 14,
+      color: "#6B7280",
+      fontWeight: "500",
+    },
 
-  courseImage: {
-    width: "100%",
-    height: 190,
-  },
+    emptyText: {
+      textAlign: "center",
+      marginTop: 20,
+      color: "#666",
+    },
 
-  courseContent: {
-    padding: 16,
-  },
+    // ================= COURSE CARD =================
 
-  courseTitle: {
-    fontSize: 20,
-    fontWeight: "800",
-    color: "#111827",
-  },
+    courseCard: {
+      backgroundColor: "#fff",
+      borderRadius: 22,
+      overflow: "hidden",
+      marginBottom: 18,
+      borderWidth: 1,
+      borderColor: "#ECECEC",
+    },
 
-  courseField: {
-    marginTop: 4,
-    color: "#6B7280",
-    fontSize: 14,
-  },
+    courseImage: {
+      width: "100%",
+      height: 190,
+    },
 
-  infoRow: {
-    flexDirection: "row",
-    marginTop: 16,
-    justifyContent: "space-between",
-  },
+    courseContent: {
+      padding: 16,
+    },
 
-  durationBadge: {
-    backgroundColor: "#EEF2FF",
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 14,
-  },
+    courseTitle: {
+      fontSize: 20,
+      fontWeight: "800",
+      color: "#111827",
+    },
 
-  durationText: {
-    color: "#4338CA",
-    fontWeight: "700",
-  },
+    courseField: {
+      marginTop: 4,
+      color: "#6B7280",
+      fontSize: 14,
+    },
 
-  demandBadge: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 14,
-  },
+    priceRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginTop: 12,
+    },
 
-  apsRow: {
-    marginTop: 14,
-    flexDirection: "row",
-    alignItems: "center",
-  },
+    priceText: {
+      marginLeft: 6,
+      color: "#4F46E5",
+      fontWeight: "800",
+      fontSize: 16,
+    },
 
-  apsLabel: {
-    marginLeft: 6,
-    color: "#374151",
-    fontWeight: "600",
-  },
+    infoRow: {
+      flexDirection: "row",
+      marginTop: 16,
+      justifyContent:
+        "space-between",
+    },
 
-  qualifyBadge: {
-    marginTop: 14,
-    alignSelf: "flex-start",
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 20,
-  },
+    durationBadge: {
+      backgroundColor:
+        "#EEF2FF",
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+      borderRadius: 14,
+    },
 
-  readMore: {
-    marginTop: 18,
-    flexDirection: "row",
-    alignItems: "center",
-  },
+    durationText: {
+      color: "#4338CA",
+      fontWeight: "700",
+    },
 
-  readMoreText: {
-    color: "#4F46E5",
-    fontWeight: "700",
-  },
+    demandBadge: {
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+      borderRadius: 14,
+    },
 
-  // ================= FILTER =================
-  filterOverlay: {
-    flex: 1,
-    justifyContent: "flex-end",
-    backgroundColor:
-      "rgba(0,0,0,0.5)",
-  },
+    apsRow: {
+      marginTop: 14,
+      flexDirection: "row",
+      alignItems: "center",
+    },
 
-  filterContainer: {
-    backgroundColor: "#fff",
-    height: "75%",
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 18,
-  },
+    apsLabel: {
+      marginLeft: 6,
+      color: "#374151",
+      fontWeight: "600",
+    },
 
-  filterHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
+    qualifyBadge: {
+      marginTop: 14,
+      alignSelf: "flex-start",
+      paddingHorizontal: 14,
+      paddingVertical: 7,
+      borderRadius: 20,
+    },
 
-  filterTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-  },
+    readMore: {
+      marginTop: 18,
+      flexDirection: "row",
+      alignItems: "center",
+    },
 
-  filterLabel: {
-    fontWeight: "bold",
-    marginTop: 25,
-    fontSize: 16,
-  },
+    readMoreText: {
+      color: "#4F46E5",
+      fontWeight: "700",
+    },
 
-  filterOption: {
-    padding: 12,
-    marginTop: 8,
-    borderRadius: 10,
-  },
+    // ================= FILTER =================
 
-  applyBtn: {
-    backgroundColor: "#4F46E5",
-    padding: 16,
-    borderRadius: 12,
-    marginTop: 12,
-  },
+    filterOverlay: {
+      flex: 1,
+      justifyContent: "flex-end",
+      backgroundColor:
+        "rgba(0,0,0,0.5)",
+    },
 
-  applyText: {
-    color: "#fff",
-    textAlign: "center",
-    fontWeight: "bold",
-  },
+    filterContainer: {
+      backgroundColor: "#fff",
+      height: "80%",
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      padding: 18,
+    },
 
-  // ================= DETAILS =================
-  detailsContainer: {
-    flex: 1,
-    backgroundColor: "#F9FAFB",
-  },
+    filterHeader: {
+      flexDirection: "row",
+      justifyContent:
+        "space-between",
+      alignItems: "center",
+    },
 
-  heroImage: {
-    width: "100%",
-    height: 280,
-  },
+    filterTitle: {
+      fontSize: 20,
+      fontWeight: "bold",
+    },
 
-  closeBtn: {
-    position: "absolute",
-    top: 55,
-    left: 20,
-    backgroundColor:
-      "rgba(0,0,0,0.5)",
-    width: 42,
-    height: 42,
-    borderRadius: 50,
-    justifyContent: "center",
-    alignItems: "center",
-  },
+    filterLabel: {
+      fontWeight: "bold",
+      marginTop: 25,
+      fontSize: 16,
+    },
 
-  heroOverlay: {
-    position: "absolute",
-    bottom: 0,
-    width: "100%",
-    backgroundColor:
-      "rgba(0,0,0,0.55)",
-    padding: 20,
-  },
+    filterOption: {
+      padding: 12,
+      marginTop: 8,
+      borderRadius: 10,
+    },
 
-  heroTitle: {
-    color: "#fff",
-    fontSize: 28,
-    fontWeight: "800",
-  },
+    // ================= PRICE FILTER =================
 
-  heroField: {
-    color: "#E5E7EB",
-    marginTop: 5,
-    fontSize: 15,
-  },
+    priceRangeCard: {
+      backgroundColor: "#F9FAFB",
+      borderRadius: 18,
+      padding: 15,
+      marginTop: 10,
+    },
 
-  detailsContent: {
-    padding: 18,
-  },
+    priceRangeHeader: {
+      flexDirection: "row",
+      justifyContent:
+        "space-between",
+      alignItems: "center",
+    },
 
-  quickInfoRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
-    marginBottom: 20,
-  },
+    priceRangeLabel: {
+      color: "#6B7280",
+      fontWeight: "600",
+    },
 
-  infoPill: {
-    backgroundColor: "#EEF2FF",
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 30,
-  },
+    priceRangeValue: {
+      color: "#4F46E5",
+      fontWeight: "800",
+    },
 
-  infoPillText: {
-    color: "#4338CA",
-    fontWeight: "700",
-  },
+    priceHelp: {
+      textAlign: "center",
+      marginTop: 8,
+      color: "#6B7280",
+      fontSize: 13,
+    },
 
-  detailsCard: {
-    backgroundColor: "#fff",
-    padding: 18,
-    borderRadius: 18,
-    marginBottom: 16,
-  },
+    applyBtn: {
+      backgroundColor: "#4F46E5",
+      padding: 16,
+      borderRadius: 12,
+      marginTop: 12,
+    },
 
-  detailsTitle: {
-    fontSize: 18,
-    fontWeight: "800",
-    color: "#111827",
-    marginBottom: 12,
-  },
+    applyText: {
+      color: "#fff",
+      textAlign: "center",
+      fontWeight: "bold",
+    },
 
-  detailsText: {
-    color: "#4B5563",
-    lineHeight: 24,
-    fontSize: 15,
-  },
+    // ================= DETAILS =================
 
-  bulletText: {
-    color: "#374151",
-    lineHeight: 28,
-    fontSize: 15,
-  },
+    detailsContainer: {
+      flex: 1,
+      backgroundColor:
+        "#F9FAFB",
+    },
 
-  subjectRow: {
-    flexDirection: "row",
-    justifyContent:
-      "space-between",
-    marginTop: 10,
-  },
+    heroImage: {
+      width: "100%",
+      height: 280,
+    },
 
-  subjectMark: {
-    fontWeight: "700",
-    color: "#4F46E5",
-  },
-});
+    closeBtn: {
+      position: "absolute",
+      top: 55,
+      left: 20,
+      backgroundColor:
+        "rgba(0,0,0,0.5)",
+      width: 42,
+      height: 42,
+      borderRadius: 50,
+      justifyContent:
+        "center",
+      alignItems: "center",
+    },
+
+    heroOverlay: {
+      position: "absolute",
+      bottom: 0,
+      width: "100%",
+      backgroundColor:
+        "rgba(0,0,0,0.55)",
+      padding: 20,
+    },
+
+    heroTitle: {
+      color: "#fff",
+      fontSize: 28,
+      fontWeight: "800",
+    },
+
+    heroField: {
+      color: "#E5E7EB",
+      marginTop: 5,
+      fontSize: 15,
+    },
+
+    detailsContent: {
+      padding: 18,
+    },
+
+    quickInfoRow: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 10,
+      marginBottom: 20,
+    },
+
+    infoPill: {
+      backgroundColor:
+        "#EEF2FF",
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+      borderRadius: 30,
+    },
+
+    infoPillText: {
+      color: "#4338CA",
+      fontWeight: "700",
+    },
+
+    detailsCard: {
+      backgroundColor: "#fff",
+      padding: 18,
+      borderRadius: 18,
+      marginBottom: 16,
+    },
+
+    detailsTitle: {
+      fontSize: 18,
+      fontWeight: "800",
+      color: "#111827",
+      marginBottom: 12,
+    },
+
+    detailsText: {
+      color: "#4B5563",
+      lineHeight: 24,
+      fontSize: 15,
+    },
+
+    coursePriceDetails: {
+      color: "#4F46E5",
+      fontSize: 24,
+      fontWeight: "800",
+    },
+
+    priceDisclaimer: {
+      color: "#6B7280",
+      fontSize: 13,
+      lineHeight: 20,
+      marginTop: 8,
+    },
+
+    bulletText: {
+      color: "#374151",
+      lineHeight: 28,
+      fontSize: 15,
+    },
+
+    subjectRow: {
+      flexDirection: "row",
+      justifyContent:
+        "space-between",
+      marginTop: 10,
+    },
+
+    subjectMark: {
+      fontWeight: "700",
+      color: "#4F46E5",
+    },
+
+  });

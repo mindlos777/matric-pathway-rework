@@ -11,7 +11,7 @@ import {
 import SearchFilterBar from "../components/FilterBar";
 import TemplateCard from "../components/TemplateCard";
 
-import { emailTemplates } from "../data/emailTemplates";
+import { emailTemplates } from "../../backend/data/emailTemplates";
 
 const categories = [
   "All",

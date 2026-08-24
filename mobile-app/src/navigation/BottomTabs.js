@@ -22,6 +22,7 @@ import CVEditorScreen from "../screens/CVEditorScreen";
 import EmailTemplatesScreen from "../screens/EmailTemplatesScreen";
 import EmailEditorScreen from "../screens/EmailEditorScreen";
 import CompareScreen from "../screens/CompareScreen";
+import AccommodationScreen from "../screens/AccommodationScreen"
 // Chatbot
 import FloatingChatbot from "../components/FloatingChatbot";
 
@@ -97,7 +98,7 @@ function Tabs() {
       )},
       })}
     >
-      <Tab.Screen name="Dashboard" component={DashboardScreen} />
+      <Tab.Screen name="Home" component={DashboardScreen} options={{}}/>
       <Tab.Screen name="Courses" component={CoursesScreen} />
       <Tab.Screen name="Universities" component={UniversitiesScreen} />
       <Tab.Screen name="Bursaries" component={BursariesScreen} />
@@ -117,24 +118,13 @@ export default function BottomTabs() {
       return route.name;
     });
 
-  // HIDE CHATBOT
-  const hideChatbotScreens = [
-    "Settings",
-    "Notifications",
-    "CVTemplates",
-    "EmailTemplates",
-    "CVEditor",
-    "EmailEditor",
-    "WebView",
-  ];
-
   return (
     <View style={{ flex: 1 }}>
 
       {/* NAVIGATION */}
       <Stack.Navigator>
         <Stack.Screen
-          name="Tabs"
+          name="MainTabs"
           component={Tabs}
           options={{ headerShown: false }}
         />
@@ -184,6 +174,7 @@ export default function BottomTabs() {
           component={EmailTemplatesScreen}
           options={{
             headerShown: false,
+            title: "Email Templates",
           }}
         />
 
@@ -198,6 +189,13 @@ export default function BottomTabs() {
         <Stack.Screen
           name="CompareScreen"
           component={CompareScreen}
+          options={{ title: "Compare Institutions" }}
+        />
+
+        <Stack.Screen
+          name="AccommodationScreen"
+          component={AccommodationScreen}
+          options={{ title: "Student Accommodations" }}
         />
       </Stack.Navigator>
 

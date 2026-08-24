@@ -19,7 +19,7 @@ import {
   Ionicons,
 } from "@expo/vector-icons";
 
-import { useAuth } from "../auth/AuthContext";
+import { useAuth } from "../../backend/auth/AuthContext";
 
 export default function EmailEditorScreen({
   route,

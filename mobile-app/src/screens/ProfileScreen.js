@@ -11,10 +11,13 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
+import { getLocalProfile } from "../utils/localProfile";
+import { useAuth } from "../../backend/auth/AuthContext";
+import {
+  KeyboardAwareScrollView
+} from "react-native-keyboard-aware-scroll-view";
 
-import { useAuth } from "../auth/AuthContext";
-
-export default function ProfileScreen() {
+export default function ProfileScreen({ navigation }) {
   const { user, profileData, saveProfile, loading, logout } = useAuth();
 
   const [editMode, setEditMode] = useState(false);
@@ -48,25 +51,29 @@ export default function ProfileScreen() {
   const calcAPS = (subjects = []) =>
     subjects.reduce((sum, s) => sum + convert(s?.mark), 0);
 
-  // ---------------- LOAD FROM CONTEXT ----------------
   useEffect(() => {
-    if (profileData) {
-      const subjects = Array.isArray(profileData.subjects)
-        ? profileData.subjects
-        : [];
+    if (!profileData) return;
 
-      const loaded = {
-        firstName: profileData.firstName || "",
-        lastName: profileData.lastName || "",
-        email: user?.email || "",
-        phone: profileData.phone || "",
-        matricYear: profileData.matricYear || "",
-        subjects,
-      };
+    const subjects = Array.isArray(
+      profileData.subjects
+    )
+      ? profileData.subjects
+      : [];
 
-      setProfile(loaded);
-      setAps(calcAPS(subjects));
-    }
+    const loaded = {
+      firstName: profileData.firstName || "",
+      lastName: profileData.lastName || "",
+      email: user?.email || profileData.email || "",
+      phone: profileData.phone || "",
+      province: profileData.province || "",
+      matricYear:
+        profileData.matricYear || "",
+      hobbies: profileData.hobbies || [],
+      subjects,
+    };
+
+    setProfile(loaded);
+    setAps(calcAPS(subjects));
   }, [profileData]);
 
   // ---------------- UPDATE FIELD ----------------
@@ -121,6 +128,7 @@ export default function ProfileScreen() {
         firstName: profile.firstName,
         lastName: profile.lastName,
         phone: profile.phone,
+        province: profile.province,
         matricYear: profile.matricYear,
         subjects: cleanSubjects,
         apsScore: finalAPS,
@@ -164,9 +172,10 @@ export default function ProfileScreen() {
 
   // ---------------- UI ----------------
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    <KeyboardAwareScrollView
+      style={{flex: 1}}
+      enableOnAndroid
+      extraScrollHeight={20}
     >
       <ScrollView
         style={styles.container}
@@ -212,6 +221,17 @@ export default function ProfileScreen() {
           onChangeText={(v) => updateField("matricYear", v)}
         />
 
+        <TextInput
+          style={styles.input}
+          editable={editMode}
+          value={profile.province}
+          placeholder="Province"
+          placeholderTextColor="#9CA3AF"
+          onChangeText={(v) =>
+            updateField("province", v)
+          }
+        />
+
         {/* APS */}
         <View style={styles.apsBox}>
           <Text style={{ color: "white" }}>APS SCORE</Text>
@@ -255,6 +275,15 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         )}
 
+        <View style={styles.input}>
+          <Text>
+            Hobbies:{" "}
+            {profile.hobbies?.length
+              ? profile.hobbies.join(", ")
+              : "None selected"}
+          </Text>
+        </View>
+
         {/* BUTTONS */}
         {!editMode ? (
           <TouchableOpacity
@@ -271,11 +300,31 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         )}
 
-        <TouchableOpacity style={styles.logout} onPress={handleLogout}>
-          <Text style={styles.btnText}>Logout</Text>
-        </TouchableOpacity>
+        {user && (
+          <TouchableOpacity
+            style={styles.logout}
+            onPress={handleLogout}
+          >
+            <Text style={styles.btnText}>
+              Logout
+            </Text>
+          </TouchableOpacity>
+        )}
+
+        {!user && (
+          <TouchableOpacity
+            style={styles.createAccBtn}
+            onPress={() =>
+              navigation.navigate("Signup")
+            }
+          >
+            <Text style={styles.btnText}>
+              Create Account & Sync Data
+            </Text>
+          </TouchableOpacity>
+        )}
       </ScrollView>
-    </KeyboardAvoidingView>
+    </KeyboardAwareScrollView>
   );
 }
 
@@ -344,6 +393,13 @@ const styles = StyleSheet.create({
 
   editBtn: {
     backgroundColor: "#4F46E5",
+    padding: 14,
+    borderRadius: 28,
+    marginTop: 15,
+  },
+
+  createAccBtn: {
+    backgroundColor: "#111",
     padding: 14,
     borderRadius: 28,
     marginTop: 15,

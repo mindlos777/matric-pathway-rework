@@ -33,9 +33,14 @@ yarn-error.*
 # local env files
 .env*.local
 
+secrets.json
+
+
 # typescript
 *.tsbuildinfo
 
 # generated native folders
 /ios
 /android
+
+data/
