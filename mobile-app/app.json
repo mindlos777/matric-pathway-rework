@@ -1,14 +1,14 @@
 {
   "expo": {
-    "name": "Pathly",
-    "slug": "pathly",
+    "name": "UniPath SA",
+    "slug": "unipath-sa",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/logo_v1.png",
+    "icon": "./assets/logo01.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/logo_v1.png",
+      "image": "./assets/logo#01.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -17,14 +17,14 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/logo_v1.png",
+        "foregroundImage": "./assets/logo#01.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "Pathly.apk"
+      "package": "com.mindlos777sorganization.unipathsa"
     },
     "web": {
-      "favicon": "./assets/logo_v1.png"
+      "favicon": "./assets/logo01.png"
     },
     "plugins": [
       "expo-font"
@@ -32,7 +32,7 @@
     "owner": "mindlos777s-organization",
     "extra": {
       "eas": {
-        "projectId": "010b6648-c7e5-4069-9363-2b4b46119c04"
+        "projectId": "c47765f1-e30c-40ec-9970-4de3f1694bb0"
       }
     }
   }

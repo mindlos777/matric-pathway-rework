@@ -8,7 +8,7 @@ import {
   Alert,
 } from "react-native";
 
-import { useAuth } from "../auth/AuthContext";
+import { useAuth } from "../../backend/auth/AuthContext";
 
 export default function SignupScreen({ navigation }) {
   const { register } = useAuth();
@@ -37,6 +37,11 @@ export default function SignupScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
+      <KeyboardAwareScrollView
+        style={{flex: 1}}
+        enableOnAndroid
+        extraScrollHeight={20}
+      >
       <Text style={styles.title}>Create Account</Text>
       <Text style={styles.subtitle}>Join Pathly</Text>
 
@@ -75,6 +80,7 @@ export default function SignupScreen({ navigation }) {
           Already have an account? Login
         </Text>
       </TouchableOpacity>
+      </KeyboardAwareScrollView>
     </View>
   );
 }

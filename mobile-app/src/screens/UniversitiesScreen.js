@@ -16,9 +16,9 @@ import {
   collection,
   onSnapshot,
 } from "firebase/firestore";
-
-import { db } from "../firebase/firebase";
-import { useAuth } from "../auth/AuthContext";
+/*import MapView, { Marker } from "react-native-maps";*/
+import { db } from "../../backend/firebase/firebase";
+import { useAuth } from "../../backend/auth/AuthContext";
 import SearchFilterBar from "../components/FilterBar";
 
 export default function UniversitiesScreen({ navigation }) {
@@ -177,10 +177,21 @@ export default function UniversitiesScreen({ navigation }) {
 
     // SORT TOP RATED
     if (filters.topRated) {
+      list = list.filter(
+        (uni) =>
+          Number(
+            uni.rating?.scoreOutOf10 || 0
+          ) >= 7
+      );
+
       list.sort(
         (a, b) =>
-          Number(b.rating || 0) -
-          Number(a.rating || 0)
+          Number(
+            b.rating?.scoreOutOf10 || 0
+          ) -
+          Number(
+            a.rating?.scoreOutOf10 || 0
+          )
       );
     }
 
@@ -335,6 +346,16 @@ export default function UniversitiesScreen({ navigation }) {
                   )}
                 </View>
 
+                <Text
+                  style={{
+                    color: "#F59E0B",
+                    fontWeight: "700",
+                    marginTop: 4,
+                  }}
+                >
+                  ⭐{item.rating?.scoreOutOf10 || "N/A"}/10
+                </Text>
+
                 {qualified && (
                   <View
                     style={{
@@ -418,8 +439,8 @@ export default function UniversitiesScreen({ navigation }) {
 
               {[
                 "University",
-                "Private",
-                "TVET",
+                "Private College",
+                "TVET College",
               ].map((t) => (
                 <TouchableOpacity
                   key={t}
@@ -684,6 +705,12 @@ export default function UniversitiesScreen({ navigation }) {
                 >
                   {selectedInstitution.type}
                 </Text>
+                
+                <Text style={{color:"white"}}>
+                Rating:
+                {" ⭐ "}
+                {selectedInstitution.rating?.scoreOutOf10}
+              </Text>
               </View>
             </View>
 
@@ -722,6 +749,64 @@ export default function UniversitiesScreen({ navigation }) {
                   }
                 </Text>
               </View>
+
+              {/* ================= LOCATION MAP ================= */}{/*
+              <View style={styles.detailsCard}>
+                <Text style={styles.detailsTitle}>
+                  Institution Location
+                </Text>
+
+                {selectedUniversity?.latitude &&
+                selectedUniversity?.longitude ? (
+                  <>
+                    <MapView
+                      style={styles.map}
+                      initialRegion={{
+                        latitude: Number(
+                          selectedUniversity.latitude
+                        ),
+                        longitude: Number(
+                          selectedUniversity.longitude
+                        ),
+                        latitudeDelta: 0.015,
+                        longitudeDelta: 0.015,
+                      }}
+                    >
+                      <Marker
+                        coordinate={{
+                          latitude: Number(
+                            selectedUniversity.latitude
+                          ),
+                          longitude: Number(
+                            selectedUniversity.longitude
+                          ),
+                        }}
+                        title={selectedUniversity.name}
+                        description="Institution location"
+                      />
+                    </MapView>
+
+                    <Text style={styles.locationText}>
+                      📍 {selectedUniversity.location ||
+                        selectedUniversity.address ||
+                        "Location available on map"}
+                    </Text>
+                  </>
+                ) : (
+                  <View style={styles.noMapContainer}>
+                    <Ionicons
+                      name="location-outline"
+                      size={30}
+                      color="#9CA3AF"
+                    />
+
+                    <Text style={styles.noMapText}>
+                      Location information is not available
+                      for this institution.
+                    </Text>
+                  </View>
+                )}
+              </View>*/}
 
               {/* CONTACT */}
               <View style={styles.detailsCard}>
@@ -778,6 +863,63 @@ export default function UniversitiesScreen({ navigation }) {
                     • {course}
                   </Text>
                 ))}
+              </View>
+
+              <View style={styles.detailsCard}>
+                <Text style={styles.detailsTitle}>
+                  Rankings & Ratings
+                </Text>
+
+                <Text style={styles.detailsText}>
+                  Overall Score:
+                  {" "}
+                  {selectedInstitution.rating?.scoreOutOf10}/10
+                </Text>
+
+                <Text style={styles.detailsText}>
+                  Webometrics:
+                  {" "}
+                  {selectedInstitution.rating?.webometrics2026}
+                </Text>
+
+                <Text style={styles.detailsText}>
+                  UniRanks:
+                  {" "}
+                  {selectedInstitution.rating?.uniranksScore2026}
+                </Text>
+
+                <Text style={styles.detailsText}>
+                  {selectedInstitution.rating?.notes}
+                </Text>
+              </View>
+
+              <View style={styles.detailsCard}>
+                <Text style={styles.detailsTitle}>
+                  Accommodation
+                </Text>
+
+                <Text style={styles.detailsText}>
+                  Available Accommodation:
+                  {" "}
+                  {selectedInstitution.accommodations?.length || 0}
+                </Text>
+
+                <TouchableOpacity
+                  style={styles.viewAccommodationBtn}
+                  onPress={() =>
+                    navigation.navigate(
+                      "AccommodationScreen",
+                      {
+                        institution:
+                          selectedInstitution,
+                      }
+                    )
+                  }
+                >
+                  <Text style={styles.viewAccommodationText}>
+                    View Accommodation {" ->"}
+                  </Text>
+                </TouchableOpacity>
               </View>
 
               {/* APPLY */}
@@ -1064,4 +1206,34 @@ const styles = StyleSheet.create({
     marginBottom: 40,
     alignItems: "center",
   },
+/*
+  map: {
+    width: "100%",
+    height: 220,
+    borderRadius: 18,
+    marginTop: 5,
+  },
+
+  locationText: {
+    marginTop: 10,
+    color: "#4B5563",
+    fontSize: 14,
+    lineHeight: 20,
+  },
+
+  noMapContainer: {
+    height: 150,
+    borderRadius: 18,
+    backgroundColor: "#F3F4F6",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+
+  noMapText: {
+    marginTop: 8,
+    textAlign: "center",
+    color: "#6B7280",
+    lineHeight: 20,
+  },*/
 });

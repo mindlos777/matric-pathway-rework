@@ -8,10 +8,10 @@ import {
   ScrollView,
 } from "react-native";
 
-import { useAuth } from "../auth/AuthContext";
+import { useAuth } from "../../backend/auth/AuthContext";
 
 import { doc, updateDoc } from "firebase/firestore";
-import { db } from "../firebase/firebase";
+import { db } from "../../backend/firebase/firebase";
 
 export default function SettingsScreen() {
   const { user, profileData, logout } = useAuth();

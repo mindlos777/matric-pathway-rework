@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import RNModal from "react-native-modal";
-import { bursaryData } from "../data/bursaryData";
+import { bursaryData } from "../../backend/data/bursaryData";
 import SearchFilterBar from "../components/FilterBar";
 
 export default function BursariesScreen({ navigation }) {

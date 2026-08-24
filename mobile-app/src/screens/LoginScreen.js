@@ -9,7 +9,7 @@ import {
   Image,
 } from "react-native";
 
-import { useAuth } from "../auth/AuthContext";
+import { useAuth } from "../../backend/auth/AuthContext";
 
 export default function LoginScreen({ navigation }) {
   const { login } = useAuth();
@@ -38,7 +38,13 @@ export default function LoginScreen({ navigation }) {
   };
   
   return (
+
     <View style={styles.container}>
+      <KeyboardAwareScrollView
+        style={{flex: 1}}
+        enableOnAndroid
+        extraScrollHeight={20}
+      >
       <Image style={{ width: 250, height: 200, marginLeft:35}} source={require('../../assets/logo_v1.png')} />
       <Text style={styles.title}></Text>
       <Text style={styles.subtitle}>Login to continue</Text>
@@ -78,7 +84,9 @@ export default function LoginScreen({ navigation }) {
           Don't have an account? Sign up
         </Text>
       </TouchableOpacity>
+      </KeyboardAwareScrollView>
     </View>
+    
   );
 }
 

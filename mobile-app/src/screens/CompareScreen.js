@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  FlatList,
   Alert,
 } from "react-native";
 
@@ -14,7 +15,7 @@ import {
   onSnapshot,
 } from "firebase/firestore";
 
-import { db } from "../firebase/firebase";
+import { db } from "../../backend/firebase/firebase";
 
 export default function CompareScreen() {
   const [universities, setUniversities] = useState([]);
@@ -47,13 +48,20 @@ export default function CompareScreen() {
   }, []);
 
   // ================= FILTER BY TYPE =================
-
   const filteredInstitutions = useMemo(() => {
     if (!selectedType) return [];
 
-    return universities.filter(
-      (uni) => uni.type === selectedType
-    );
+    const normalized = selectedType.toLowerCase();
+
+  return universities.filter(
+    (uni) =>
+      uni.type?.toLowerCase().includes(
+        selectedType.toLowerCase()
+      ) &&
+      !compareList.some(
+        (selected) => selected.id === uni.id
+      )
+  );
   }, [selectedType, universities]);
 
   // ================= ADD =================
@@ -109,10 +117,6 @@ export default function CompareScreen() {
       style={styles.container}
       showsVerticalScrollIndicator={false}
     >
-      <Text style={styles.header}>
-        Compare Institutions
-      </Text>
-
       {/* TYPE SELECTOR */}
 
       <Text style={styles.label}>
@@ -120,7 +124,7 @@ export default function CompareScreen() {
       </Text>
 
       <View style={styles.row}>
-        {["University", "Private", "TVET"].map(
+        {["University", "Private College", "TVET College"].map(
           (type) => (
             <TouchableOpacity
               key={type}
@@ -159,46 +163,52 @@ export default function CompareScreen() {
             Select Institution
           </Text>
 
-          <ScrollView
+          <View
             style={{
               maxHeight: 250,
               marginTop: 10,
             }}
-            showsVerticalScrollIndicator={true}
           >
-            {filteredInstitutions.map((uni) => (
-              <TouchableOpacity
-                key={uni.id}
-                onPress={() =>
-                  setSelectedInstitution(uni)
-                }
-                style={[
-                  styles.dropdownItem,
-                  selectedInstitution?.id ===
-                    uni.id &&
-                    styles.activeBtn,
-                ]}
-              >
-                <Text
+            <ScrollView
+              nestedScrollEnabled
+              showsVerticalScrollIndicator
+            >
+              {filteredInstitutions.map((uni) => (
+                <TouchableOpacity
+                  key={uni.id}
+                  onPress={() => setSelectedInstitution(uni)}
                   style={[
-                    styles.optionText,
-                    selectedInstitution?.id ===
-                      uni.id &&
-                      styles.activeText,
+                    styles.dropdownItem,
+                    selectedInstitution?.id === uni.id &&
+                      styles.activeBtn,
                   ]}
                 >
-                  {uni.name}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+                  <Text
+                    style={[
+                      styles.optionText,
+                      selectedInstitution?.id === uni.id &&
+                        styles.activeText,
+                    ]}
+                  >
+                    {uni.name}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
         </>
       )}
 
       {/* ADD BUTTON */}
 
       <TouchableOpacity
-        style={styles.addBtn}
+        disabled={!selectedInstitution}
+        style={[
+          styles.addBtn,
+          !selectedInstitution && {
+            opacity: 0.5,
+          },
+        ]}
         onPress={addInstitution}
       >
         <Text style={styles.addText}>
@@ -250,7 +260,7 @@ export default function CompareScreen() {
             Comparison Results
           </Text>
 
-          <ScrollView horizontal>
+          <ScrollView horizontal style={{paddingBottom:70}}>
             <View>
               {/* NAME */}
 
@@ -303,7 +313,6 @@ export default function CompareScreen() {
               </View>
 
               {/* RATING */}
-
               <View style={styles.compareRow}>
                 <Text style={styles.compareLabel}>
                   Rating
@@ -314,7 +323,7 @@ export default function CompareScreen() {
                     key={uni.id}
                     style={styles.compareCell}
                   >
-                    {uni.rating || "-"}
+                    ⭐ {uni.rating?.scoreOutOf10 || "-"}
                   </Text>
                 ))}
               </View>
@@ -351,15 +360,10 @@ export default function CompareScreen() {
 
 const styles = StyleSheet.create({
   container: {
+    paddingTop:30,
     flex: 1,
     backgroundColor: "#fff",
     padding: 16,
-  },
-
-  header: {
-    fontSize: 24,
-    fontWeight: "800",
-    marginBottom: 20,
   },
 
   label: {

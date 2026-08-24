@@ -8,8 +8,8 @@ import {
 } from "react-native";
 import SearchFilterBar from "../components/FilterBar";
 import TemplateCard from "../components/TemplateCard";
+import { cvTemplates } from "../../backend/data/cvTemplates";
 
-import { cvTemplates } from "../data/cvTemplates";
 
 const categories = [
   "All",

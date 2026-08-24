@@ -8,18 +8,18 @@ import {
   ActivityIndicator,
 } from "react-native";
 
-import { useAuth } from "../auth/AuthContext";
-import { universities } from "../data/universityData";
+import { useAuth } from "../../backend/auth/AuthContext";
+import { universities } from "../../backend/data/universityData";
 
-import { doc, onSnapshot } from "firebase/firestore";
-import { db } from "../firebase/firebase";
 import { Ionicons } from "@expo/vector-icons";
 
 export default function DashboardScreen({ navigation }) {
-  const { user } = useAuth();
+  const {
+    user,
+    profileData,
+    loading,
+  } = useAuth();
 
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(3);
 
   //HEADER ICONS (NOTIFICATIONS + SETTINGS)
@@ -57,36 +57,18 @@ export default function DashboardScreen({ navigation }) {
     });
   }, [navigation]);
 
-  // ---------------- REALTIME LISTENER ----------------
-  useEffect(() => {
-    if (!user?.uid) return;
-
-    const ref = doc(db, "users", user.uid);
-
-    const unsubscribe = onSnapshot(
-      ref,
-      (snap) => {
-        if (snap.exists()) {
-          setProfile(snap.data());
-        }
-        setLoading(false);
-      },
-      (error) => {
-        console.log("Realtime error:", error);
-        setLoading(false);
-      }
-    );
-
-    return () => unsubscribe();
-  }, [user]);
-
   // ---------------- SAFE VALUES ----------------
-  const apsScore = profile?.apsScore ?? null;
-  const subjects = profile?.subjects ?? [];
+  const apsScore =
+    Number(profileData?.apsScore || 0);
+
+  const subjects =
+    Array.isArray(profileData?.subjects)
+      ? profileData.subjects
+      : [];
 
   // ---------------- NAME ----------------
   const displayName =
-    profile?.firstName ||
+    profileData?.firstName ||
     user?.email?.split("@")[0] ||
     "Student";
 
@@ -94,13 +76,20 @@ export default function DashboardScreen({ navigation }) {
   const profileProgress = useMemo(() => {
     let score = 0;
 
-    if (profile?.email) score += 20;
-    if (apsScore) score += 30;
-    if (subjects.length > 0) score += 30;
-    if (profile?.phone) score += 20;
+    if (profileData?.firstName)
+      score += 20;
+
+    if (profileData?.province)
+      score += 20;
+
+    if (apsScore > 0)
+      score += 30;
+
+    if (subjects.length > 0)
+      score += 30;
 
     return score;
-  }, [profile, apsScore, subjects]);
+  }, [profileData, apsScore, subjects]);
 
   // ---------------- QUALIFIED UNIVERSITIES ----------------
   const qualified = useMemo(() => {
@@ -133,7 +122,9 @@ export default function DashboardScreen({ navigation }) {
       </View>
 
       <Text style={styles.subtitle}>
-        Let’s build your future today
+        {profileData?.province
+          ? `Province: ${profileData.province}`
+          : "Let's build your future today"}
       </Text>
 
       {/* APS CARD */}
@@ -185,9 +176,12 @@ export default function DashboardScreen({ navigation }) {
             key={u.id}
             style={styles.uniCard}
             onPress={() =>
-              navigation.navigate("WebView", {
-                url: u.applyLink,
-              })
+              navigation.navigate(
+                "WebViewScreen",
+                {
+                  url: u.applyLink,
+                }
+              )
             }
             activeOpacity={0.7}
           >
