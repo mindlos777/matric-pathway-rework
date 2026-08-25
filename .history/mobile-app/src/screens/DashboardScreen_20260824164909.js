@@ -9,7 +9,7 @@ import {
 } from "react-native";
 
 import { useAuth } from "../../backend/auth/AuthContext";
-//import { universities } from "../../backend/data/universityData";
+import { universities } from "../../backend/data/universityData";
 
 import { Ionicons } from "@expo/vector-icons";
 

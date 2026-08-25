@@ -9,9 +9,9 @@ import {
 } from "react-native";
 
 import { collection, getDocs } from "firebase/firestore";
-import { db } from "../../backend/firebase/firebase";
+import { db } from "../firebase/firebase";
 
-import { useAuth } from "../../backend/auth/AuthContext";
+import { useAuth } from "../auth/AuthContext";
 
 export default function NotificationsScreen({
   navigation,

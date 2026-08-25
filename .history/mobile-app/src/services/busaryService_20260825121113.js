@@ -1,6 +1,7 @@
 import { db } from "../../backend/firebase/firebase";
 import { collection, getDocs } from "firebase/firestore";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { db } from "../firebase/firebase";
 //import { bursaryData } from "../data/bursaryData";
 
 const CACHE_KEY = "cached_bursaries";
