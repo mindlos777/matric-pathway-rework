@@ -19,13 +19,13 @@ import {
 import Slider from "@react-native-community/slider";
 
 import { Ionicons } from "@expo/vector-icons";
-import { db } from "../../backend/firebase/firebase";
+import 
 import { getCourses } from "../services/courseService";
 import { useAuth } from "../../backend/auth/AuthContext";
 import SearchFilterBar from "../components/FilterBar";
 
-import { courseDescriptions } from "../../backend/data/courseDescriptions";
-import { universities } from "../../backend/data/universityData";
+//import { courseDescriptions } from "../../backend/data/courseDescriptions";
+//import { universities } from "../../backend/data/universityData";
 
 export default function CoursesScreen() {
   const { apsScore } = useAuth();

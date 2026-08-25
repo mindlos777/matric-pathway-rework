@@ -19,7 +19,7 @@ import {
 import Slider from "@react-native-community/slider";
 
 import { Ionicons } from "@expo/vector-icons";
-import { db } from "../../backend/firebase/firebase";
+
 import { getCourses } from "../services/courseService";
 import { useAuth } from "../../backend/auth/AuthContext";
 import SearchFilterBar from "../components/FilterBar";

@@ -25,7 +25,7 @@ import { useAuth } from "../../backend/auth/AuthContext";
 import SearchFilterBar from "../components/FilterBar";
 
 import { courseDescriptions } from "../../backend/data/courseDescriptions";
-import { universities } from "../../backend/data/universityData";
+//import { universities } from "../../backend/data/universityData";
 
 export default function CoursesScreen() {
   const { apsScore } = useAuth();

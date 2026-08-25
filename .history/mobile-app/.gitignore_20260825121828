@@ -43,4 +43,4 @@ secrets.json
 /ios
 /android
 
-data
+data/

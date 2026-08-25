@@ -21,7 +21,7 @@ import { Ionicons } from "@expo/vector-icons";
 import RNModal from "react-native-modal";
 
 import SearchFilterBar from "../components/FilterBar";
-import { getBursaries } from "../services/busaryService";
+import { getBursaries } from "../services/bu";
 
 export default function BursariesScreen({
   navigation,
