@@ -16,6 +16,8 @@ export async function getBursaries() {
         ...doc.data(),
       }));
 
+      console.log("FIRESTORE BURSARIES:", bursaries);
+
       // Cache bursaries
       await AsyncStorage.setItem(
         CACHE_KEY,
