@@ -17,7 +17,6 @@ import {
   onSnapshot,
 } from "firebase/firestore";
 import MapView, { Marker } from "react-native-maps";
-import { Ionicons } from "@expo/vector-icons";
 import { db } from "../../backend/firebase/firebase";
 import { useAuth } from "../../backend/auth/AuthContext";
 import SearchFilterBar from "../components/FilterBar";
@@ -788,8 +787,8 @@ export default function UniversitiesScreen({ navigation }) {
                     </MapView>
 
                     <Text style={styles.locationText}>
-                      📍 {selectedInstitution.location ||
-                        selectedInstitution.address ||
+                      📍 {selectedUniversity.location ||
+                        selectedUniversity.address ||
                         "Location available on map"}
                     </Text>
                   </>

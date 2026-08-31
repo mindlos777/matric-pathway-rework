@@ -17,7 +17,6 @@ import {
   onSnapshot,
 } from "firebase/firestore";
 import MapView, { Marker } from "react-native-maps";
-import { Ionicons } from "@expo/vector-icons";
 import { db } from "../../backend/firebase/firebase";
 import { useAuth } from "../../backend/auth/AuthContext";
 import SearchFilterBar from "../components/FilterBar";
@@ -757,17 +756,17 @@ export default function UniversitiesScreen({ navigation }) {
                   Institution Location
                 </Text>
 
-                {selectedInstitution?.latitude &&
-                selectedInstitution?.longitude ? (
+                {selectedUniversity?.latitude &&
+                selectedUniversity?.longitude ? (
                   <>
                     <MapView
                       style={styles.map}
                       initialRegion={{
                         latitude: Number(
-                          selectedInstitution.latitude
+                          selectedUniversity.latitude
                         ),
                         longitude: Number(
-                          selectedInstitution.longitude
+                          selectedUniversity.longitude
                         ),
                         latitudeDelta: 0.015,
                         longitudeDelta: 0.015,
@@ -776,20 +775,20 @@ export default function UniversitiesScreen({ navigation }) {
                       <Marker
                         coordinate={{
                           latitude: Number(
-                            selectedInstitution.latitude
+                            selectedUniversity.latitude
                           ),
                           longitude: Number(
-                            selectedInstitution.longitude
+                            selectedUniversity.longitude
                           ),
                         }}
-                        title={selectedInstitution.name}
+                        title={selectedUniversity.name}
                         description="Institution location"
                       />
                     </MapView>
 
                     <Text style={styles.locationText}>
-                      📍 {selectedInstitution.location ||
-                        selectedInstitution.address ||
+                      📍 {selectedUniversity.location ||
+                        selectedUniversity.address ||
                         "Location available on map"}
                     </Text>
                   </>
