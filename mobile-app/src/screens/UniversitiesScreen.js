@@ -16,7 +16,8 @@ import {
   collection,
   onSnapshot,
 } from "firebase/firestore";
-//import MapView, { Marker } from "react-native-maps";
+import MapView, { Marker } from "react-native-maps";
+import { Ionicons } from "@expo/vector-icons";
 import { db } from "../../backend/firebase/firebase";
 import { useAuth } from "../../backend/auth/AuthContext";
 import SearchFilterBar from "../components/FilterBar";
@@ -750,23 +751,23 @@ export default function UniversitiesScreen({ navigation }) {
                 </Text>
               </View>
 
-              {/* ================= LOCATION MAP ================= */}{/*
+              {/* ================= LOCATION MAP ================= */}
               <View style={styles.detailsCard}>
                 <Text style={styles.detailsTitle}>
                   Institution Location
                 </Text>
 
-                {selectedUniversity?.latitude &&
-                selectedUniversity?.longitude ? (
+                {selectedInstitution?.latitude &&
+                selectedInstitution?.longitude ? (
                   <>
                     <MapView
                       style={styles.map}
                       initialRegion={{
                         latitude: Number(
-                          selectedUniversity.latitude
+                          selectedInstitution.latitude
                         ),
                         longitude: Number(
-                          selectedUniversity.longitude
+                          selectedInstitution.longitude
                         ),
                         latitudeDelta: 0.015,
                         longitudeDelta: 0.015,
@@ -775,20 +776,20 @@ export default function UniversitiesScreen({ navigation }) {
                       <Marker
                         coordinate={{
                           latitude: Number(
-                            selectedUniversity.latitude
+                            selectedInstitution.latitude
                           ),
                           longitude: Number(
-                            selectedUniversity.longitude
+                            selectedInstitution.longitude
                           ),
                         }}
-                        title={selectedUniversity.name}
+                        title={selectedInstitution.name}
                         description="Institution location"
                       />
                     </MapView>
 
                     <Text style={styles.locationText}>
-                      📍 {selectedUniversity.location ||
-                        selectedUniversity.address ||
+                      📍 {selectedInstitution.location ||
+                        selectedInstitution.address ||
                         "Location available on map"}
                     </Text>
                   </>
@@ -806,7 +807,7 @@ export default function UniversitiesScreen({ navigation }) {
                     </Text>
                   </View>
                 )}
-              </View>*/}
+              </View>
 
               {/* CONTACT */}
               <View style={styles.detailsCard}>
