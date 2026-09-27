@@ -266,7 +266,7 @@ Install the following before running the project:
 ### Clone the repository
 
 ```bash
-git clone [REPOSITORY_URL](https://github.com/mindlos777/matric-pathway-rework)
+git clone REPOSITORY_URL
 cd YOUR_PROJECT_FOLDER
 ```
 
